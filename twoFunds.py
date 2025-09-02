@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from scipy.optimize import minimize
+import matplotlib.pyplot as plt
 
 
 def calculate_portfolio_vol(weights, cov_matrix):
@@ -181,3 +182,90 @@ monthly_return = portfolio_returns.mean()
 annual_return = np.exp(monthly_return * 12) - 1  # Properly annualize log returns
 print(f"Expected Annual Return: {annual_return:.2%}")
 print(f"Sharpe Ratio (assuming 0% risk-free rate): {annual_return/annualized_vol:.2f}")
+
+
+# Plot efficient frontier and allocation analysis
+def get_portfolio_metrics(weights):
+    portfolio_ret = np.sum(weights * returns.mean() * 12)  # Annualized return
+    portfolio_vol = np.sqrt(np.dot(weights.T, np.dot(returns.cov() * 12, weights)))
+    return portfolio_vol, portfolio_ret
+
+
+# Generate random portfolios
+n_portfolios = 1000
+all_weights = []
+ret_arr = []
+vol_arr = []
+sharpe_arr = []
+
+for i in range(n_portfolios):
+    weights = np.random.random(2)
+    weights = weights / np.sum(weights)
+    all_weights.append(weights)
+
+    vol, ret = get_portfolio_metrics(weights)
+    ret_arr.append(ret)
+    vol_arr.append(vol)
+    sharpe_arr.append(ret / vol)  # Assuming 0% risk-free rate
+
+# Convert to numpy arrays
+returns_arr = np.array(ret_arr)
+volatility_arr = np.array(vol_arr)
+sharpe_arr = np.array(sharpe_arr)
+
+# Calculate metrics for the true minimum variance portfolio weights
+min_var_weights = optimize_min_variance(
+    returns.cov() * 12
+)  # Using annualized covariance
+min_var_vol, min_var_ret = get_portfolio_metrics(min_var_weights)
+
+# Get metrics for individual assets
+asset_rets = returns.mean() * 12
+asset_vols = returns.std() * np.sqrt(12)
+
+# Create subplots
+fig, (ax2) = plt.subplots(1, 1, figsize=(9, 6))
+
+# Plot 2: Canada Allocation vs Volatility
+canada_weights = [w[0] for w in all_weights]  # First weight is for Canada
+scatter2 = ax2.scatter(
+    volatility_arr,
+    canada_weights,
+    c=returns_arr,
+    cmap="viridis",
+    marker="o",
+    s=10,
+    alpha=0.3,
+)
+
+# Plot minimum variance portfolio point
+ax2.scatter(
+    min_var_vol,
+    min_var_weights[0],  # Canada weight in minimum variance portfolio
+    color="red",
+    marker="*",
+    s=200,
+    label="Minimum Variance Portfolio",
+)
+
+ax2.set_xlabel("Historical Annual Price Volatility")
+ax2.set_ylabel("Allocation to Canada")
+ax2.set_title("Canada/ACWI Allocation vs Portfolio Volatility")
+ax2.legend()
+ax2.grid(True, alpha=0.2)
+ax2.set_ylim([0, 1])
+
+# Adjust layout and display
+plt.tight_layout()
+plt.show()
+
+# Print optimal allocation analysis
+print("\nOptimal Allocation Analysis:")
+print("\nMinimum Variance Portfolio Composition:")
+print(f"Canada Weight: {min_var_weights[0]:.2%}")
+print(f"ACWI Weight: {min_var_weights[1]:.2%}")
+print(f"Total Weight: {sum(min_var_weights):.2%}")
+print(f"\nRisk-Return Metrics:")
+print(f"Portfolio Volatility (Annual): {min_var_vol:.2%}")
+print(f"Expected Return (Annual): {min_var_ret:.2%}")
+print(f"Sharpe Ratio: {min_var_ret/min_var_vol:.2f}")

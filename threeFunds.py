@@ -173,10 +173,14 @@ portfolio_monthly_vol = calculate_portfolio_vol(weights, cov_matrix)
 annualized_vol = portfolio_monthly_vol * np.sqrt(12)  # Annualize monthly volatility
 
 print("\nMinimum Variance Portfolio Allocation:")
+print("\nDetailed Portfolio Weights:")
+total_weight = 0
 for asset, weight in zip(returns.columns, weights):
     print(f"{asset}: {weight:.2%}")
+    total_weight += weight
+print(f"\nTotal Weight: {total_weight:.2%}")
 
-print(f"\nPortfolio Metrics:")
+print(f"\nPortfolio Risk Metrics:")
 print(f"Monthly Volatility: {portfolio_monthly_vol:.2%}")
 print(f"Annual Volatility: {annualized_vol:.2%}")
 
