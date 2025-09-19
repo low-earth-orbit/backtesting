@@ -1,6 +1,10 @@
 import pandas as pd
 import numpy as np
 from scipy.optimize import minimize
+from datetime import datetime, timedelta
+
+# Configuration
+LOOKBACK_YEARS = 50  # Number of years of historical data to use for optimization
 
 
 def calculate_portfolio_vol(weights, cov_matrix):
@@ -132,11 +136,15 @@ prices = pd.concat(
     axis=1,
 )
 
-# Drop rows with missing values and verify data
+# Drop rows with missing values
 prices = prices.dropna()
 
-# Print data summary for verification
-print("\nData Summary:")
+# Filter to use only the last LOOKBACK_YEARS years of data
+end_date = prices.index.max()
+start_date = end_date - pd.DateOffset(years=LOOKBACK_YEARS)
+prices = prices[prices.index >= start_date]
+
+print(f"\nData Summary (using last {LOOKBACK_YEARS} years of data):")
 print("Date Range:", prices.index.min(), "to", prices.index.max())
 print("\nNumber of observations:", len(prices))
 print("\nPrice Statistics:")

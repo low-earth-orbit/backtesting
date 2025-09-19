@@ -1,6 +1,14 @@
 import pandas as pd
 import numpy as np
 from scipy.optimize import minimize
+from datetime import datetime, timedelta
+import matplotlib.pyplot as plt
+
+# Configuration
+LOOKBACK_YEARS = 35  # Number of years of historical data to use for optimization
+ROLLING_WINDOW_YEARS = 10  # Length of rolling window for stability analysis
+WINDOW_STEP_MONTHS = 12  # How often to calculate new weights (annual rebalancing)
+RESAMPLE_ITERATIONS = 1000  # Number of bootstrap iterations for resampled efficiency
 
 
 def calculate_portfolio_vol(weights, cov_matrix):
@@ -34,6 +42,133 @@ def optimize_min_variance(cov_matrix):
     )
 
     return result.x
+
+
+def bootstrap_returns(returns, size=None):
+    """
+    Generate bootstrapped returns by sampling with replacement
+    """
+    if size is None:
+        size = len(returns)
+    indices = np.random.randint(0, len(returns), size=size)
+    return returns.iloc[indices]
+
+
+def optimize_resampled_portfolio(returns, n_iterations=RESAMPLE_ITERATIONS):
+    """
+    Perform resampled efficiency optimization
+    Returns both the resampled weights and the distribution of weights
+    """
+    n_assets = returns.shape[1]
+    all_weights = np.zeros((n_iterations, n_assets))
+
+    for i in range(n_iterations):
+        # Generate bootstrapped sample
+        boot_returns = bootstrap_returns(returns)
+
+        # Calculate covariance matrix for this sample
+        boot_cov = boot_returns.cov()
+
+        # Optimize for this sample
+        weights = optimize_min_variance(boot_cov)
+        all_weights[i] = weights
+
+    # Calculate mean weights across all iterations
+    mean_weights = np.mean(all_weights, axis=0)
+
+    # Calculate confidence intervals and statistics
+    weight_stats = {
+        "mean": mean_weights,
+        "std": np.std(all_weights, axis=0),
+        "percentile_5": np.percentile(all_weights, 5, axis=0),
+        "percentile_95": np.percentile(all_weights, 95, axis=0),
+    }
+
+    return mean_weights, weight_stats
+
+
+def analyze_rolling_weights(returns, window_years, step_months):
+    """
+    Perform rolling window analysis of minimum variance portfolio weights
+    """
+    window_size = window_years * 12  # Convert years to months
+    weights_over_time = []
+    dates = []
+
+    # Calculate weights for each window
+    for start_idx in range(0, len(returns) - window_size, step_months):
+        end_idx = start_idx + window_size
+        window_returns = returns.iloc[start_idx:end_idx]
+        window_cov = window_returns.cov()
+        weights = optimize_min_variance(window_cov)
+        weights_over_time.append(weights)
+        dates.append(returns.index[end_idx - 1])  # Use end of window date
+
+    # Convert to DataFrame for easier analysis
+    weights_df = pd.DataFrame(weights_over_time, columns=returns.columns, index=dates)
+
+    return weights_df
+
+
+def plot_resampled_weights(weight_stats, asset_names):
+    """
+    Plot the distribution of resampled portfolio weights with confidence intervals
+    """
+    plt.figure(figsize=(12, 6))
+    x = np.arange(len(asset_names))
+    width = 0.35
+
+    # Plot mean weights as bars
+    plt.bar(x, weight_stats["mean"], width, label="Mean Weight")
+
+    # Add error bars for 90% confidence interval
+    plt.errorbar(
+        x,
+        weight_stats["mean"],
+        yerr=[
+            weight_stats["mean"] - weight_stats["percentile_5"],
+            weight_stats["percentile_95"] - weight_stats["mean"],
+        ],
+        fmt="none",
+        color="black",
+        capsize=5,
+        label="90% Confidence Interval",
+    )
+
+    plt.xlabel("Assets")
+    plt.ylabel("Portfolio Weight")
+    plt.title("Resampled Portfolio Weights with 90% Confidence Intervals")
+    plt.xticks(x, asset_names)
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_rolling_weights(weights_df):
+    """
+    Plot the evolution of portfolio weights over time
+    """
+    plt.figure(figsize=(15, 10))
+
+    # Plot weights evolution
+    for column in weights_df.columns:
+        plt.plot(weights_df.index, weights_df[column], label=column, linewidth=2)
+
+    plt.title(
+        f"Evolution of Minimum Variance Portfolio Weights\n{ROLLING_WINDOW_YEARS}-Year Rolling Window"
+    )
+    plt.xlabel("End of Rolling Window Period")
+    plt.ylabel("Portfolio Weight")
+    plt.legend(title="Asset", bbox_to_anchor=(1.05, 1), loc="upper left")
+    plt.grid(True, alpha=0.3)
+
+    # Rotate x-axis labels for better readability
+    plt.xticks(rotation=45)
+
+    # Adjust layout to prevent label cutoff
+    plt.tight_layout()
+    plt.show()
 
 
 def load_and_clean_data(file_path):
@@ -135,10 +270,15 @@ prices = pd.concat(
     axis=1,
 )
 
-# Drop rows with missing values and verify data
+# Drop rows with missing values
 prices = prices.dropna()
 
-print("\nData Summary:")
+# Filter to use only the last LOOKBACK_YEARS years of data
+end_date = prices.index.max()
+start_date = end_date - pd.DateOffset(years=LOOKBACK_YEARS)
+prices = prices[prices.index >= start_date]
+
+print(f"\nData Summary (using last {LOOKBACK_YEARS} years of data):")
 print("Date Range:", prices.index.min(), "to", prices.index.max())
 print("\nNumber of observations:", len(prices))
 print("\nPrice Statistics:")
@@ -166,10 +306,40 @@ cov_matrix = returns.cov()  # Monthly covariance matrix
 print("\nCorrelation Matrix:")
 print(returns.corr().round(3))  # Rounded to 3 decimal places for readability
 
-# Calculate minimum variance portfolio weights
-weights = optimize_min_variance(cov_matrix)
+# Calculate traditional minimum variance portfolio weights
+print("\nCalculating traditional minimum variance portfolio...")
+traditional_weights = optimize_min_variance(cov_matrix)
 
-# Calculate portfolio metrics
+# Calculate resampled efficient portfolio
+print(
+    f"\nCalculating resampled efficient portfolio (using {RESAMPLE_ITERATIONS} iterations)..."
+)
+resampled_weights, weight_stats = optimize_resampled_portfolio(returns)
+
+# Compare traditional vs resampled weights
+print("\nPortfolio Weights Comparison:")
+print("\nTraditional Minimum Variance Weights:")
+for asset, weight in zip(returns.columns, traditional_weights):
+    print(f"{asset}: {weight:.2%}")
+
+print("\nResampled Efficient Weights:")
+for asset, weight in zip(returns.columns, resampled_weights):
+    print(f"{asset}: {weight:.2%}")
+
+print("\nResampled Weight Statistics:")
+for i, asset in enumerate(returns.columns):
+    print(f"\n{asset}:")
+    print(f"  Mean: {weight_stats['mean'][i]:.2%}")
+    print(f"  Std Dev: {weight_stats['std'][i]:.2%}")
+    print(
+        f"  90% CI: [{weight_stats['percentile_5'][i]:.2%}, {weight_stats['percentile_95'][i]:.2%}]"
+    )
+
+# Plot resampled weight distribution
+plot_resampled_weights(weight_stats, returns.columns)
+
+# Calculate portfolio metrics using resampled weights
+weights = resampled_weights  # Use resampled weights for subsequent analysis
 portfolio_monthly_vol = calculate_portfolio_vol(weights, cov_matrix)
 annualized_vol = portfolio_monthly_vol * np.sqrt(12)  # Annualize monthly volatility
 
@@ -187,6 +357,27 @@ monthly_return = portfolio_returns.mean()
 annual_return = np.exp(monthly_return * 12) - 1  # Properly annualize log returns
 print(f"Expected Annual Return: {annual_return:.2%}")
 print(f"Sharpe Ratio (assuming 0% risk-free rate): {annual_return/annualized_vol:.2f}")
+
+# Perform rolling window analysis
+print("\nPerforming rolling window analysis...")
+rolling_weights = analyze_rolling_weights(
+    returns, ROLLING_WINDOW_YEARS, WINDOW_STEP_MONTHS
+)
+
+# Calculate weight stability metrics
+print(f"\nWeight Stability Analysis ({ROLLING_WINDOW_YEARS}-year rolling windows):")
+print("\nWeight Statistics:")
+print(rolling_weights.describe().round(3))
+
+print("\nWeight Ranges (Min-Max):")
+for asset in rolling_weights.columns:
+    weight_range = rolling_weights[asset].max() - rolling_weights[asset].min()
+    print(f"{asset}:")
+    print(f"  Range: {weight_range:.2%}")
+    print(f"  Standard Deviation: {rolling_weights[asset].std():.2%}")
+
+# Plot rolling weights
+plot_rolling_weights(rolling_weights)
 
 # Additional analysis: Individual market statistics
 print("\nIndividual Market Statistics (Annualized):")
