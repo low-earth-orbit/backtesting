@@ -9,8 +9,8 @@ from scipy.optimize import minimize
 # --- Asset Classes ---
 # Stocks only (original logic remains unchanged)
 stock_assets = ["A Shares", "HK-listed Stocks", "US Stocks", "Europe Stocks"]
-stock_nominal_returns = np.array([0.08, 0.085, 0.07, 0.08])
-stock_fees = np.array([0.005, 0.012, 0.012, 0.02])
+stock_nominal_returns = np.array([0.07, 0.075, 0.065, 0.07])
+stock_fees = np.array([0.0025, 0.014, 0.012, 0.018])
 stock_net_returns = stock_nominal_returns - stock_fees
 stock_vols = np.array([0.2176, 0.1930, 0.1446, 0.16])
 stock_corr = np.array(
@@ -26,8 +26,8 @@ stock_cov = np.outer(stock_vols, stock_vols) * stock_corr
 # --- Add China Bond ---
 assets = ["A Shares", "HK-listed Stocks", "US Stocks", "Europe Stocks", "China Bond"]
 
-nominal_returns = np.array([0.08, 0.085, 0.07, 0.08, 0.03])
-fees = np.array([0.005, 0.012, 0.012, 0.02, 0.005])
+nominal_returns = np.array([0.07, 0.075, 0.065, 0.07, 0.03])
+fees = np.array([0.0025, 0.014, 0.012, 0.018, 0.003])
 net_returns = nominal_returns - fees
 vols = np.array([0.2176, 0.1930, 0.1446, 0.16, 0.02])
 
