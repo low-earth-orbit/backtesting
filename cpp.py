@@ -15,10 +15,10 @@ stock_net_returns = stock_nominal_returns - stock_fees
 stock_vols = np.array([0.2176, 0.1930, 0.1446, 0.16])
 stock_corr = np.array(
     [
-        [1.00, 0.68, 0.44, 0.40],
-        [0.68, 1.00, 0.49, 0.50],
+        [1.00, 0.68, 0.44, 0.44],
+        [0.68, 1.00, 0.49, 0.49],
         [0.44, 0.49, 1.00, 0.70],
-        [0.40, 0.50, 0.70, 1.00],
+        [0.44, 0.49, 0.70, 1.00],
     ]
 )
 stock_cov = np.outer(stock_vols, stock_vols) * stock_corr
@@ -34,10 +34,10 @@ vols = np.array([0.2176, 0.1930, 0.1446, 0.16, 0.02])
 # Correlation matrix (5x5)
 corr = np.array(
     [
-        [1.00, 0.68, 0.44, 0.40, 0.30],  # A Shares
-        [0.68, 1.00, 0.49, 0.50, 0.10],  # HK Stocks
+        [1.00, 0.68, 0.44, 0.44, 0.30],  # A Shares
+        [0.68, 1.00, 0.49, 0.49, 0.10],  # HK Stocks
         [0.44, 0.49, 1.00, 0.70, 0.10],  # US Stocks
-        [0.40, 0.50, 0.70, 1.00, 0.10],  # Europe Stocks
+        [0.44, 0.49, 0.70, 1.00, 0.10],  # Europe Stocks
         [0.30, 0.10, 0.10, 0.10, 1.00],  # China Bond
     ]
 )

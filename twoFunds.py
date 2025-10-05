@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
 
 # Configuration
-LOOKBACK_YEARS = 20  # Number of years of historical data to use for optimization
+LOOKBACK_YEARS = 40  # Number of years of historical data to use for optimization
 
 
 def calculate_portfolio_vol(weights, cov_matrix):
@@ -117,8 +117,8 @@ def load_and_clean_data(file_path):
 
 
 # File paths
-canada_path = "dataset/canada-price-cad.xls"
-acwi_path = "dataset/acwi-price-cad.xls"
+canada_path = "dataset/canada-cad-net.xls"
+acwi_path = "dataset/world-ex-canada-cad-net.xls"
 
 # Read and clean price data
 print("Loading and cleaning data...")

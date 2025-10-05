@@ -5,8 +5,8 @@ from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 
 # Configuration
-LOOKBACK_YEARS = 35  # Number of years of historical data to use for optimization
-ROLLING_WINDOW_YEARS = 10  # Length of rolling window for stability analysis
+LOOKBACK_YEARS = 40  # Number of years of historical data to use for optimization
+ROLLING_WINDOW_YEARS = 12  # Length of rolling window for stability analysis
 WINDOW_STEP_MONTHS = 12  # How often to calculate new weights (annual rebalancing)
 RESAMPLE_ITERATIONS = 1000  # Number of bootstrap iterations for resampled efficiency
 
@@ -144,33 +144,6 @@ def plot_resampled_weights(weight_stats, asset_names):
     plt.tight_layout()
     plt.show()
 
-
-def plot_rolling_weights(weights_df):
-    """
-    Plot the evolution of portfolio weights over time
-    """
-    plt.figure(figsize=(15, 10))
-
-    # Plot weights evolution
-    for column in weights_df.columns:
-        plt.plot(weights_df.index, weights_df[column], label=column, linewidth=2)
-
-    plt.title(
-        f"Evolution of Minimum Variance Portfolio Weights\n{ROLLING_WINDOW_YEARS}-Year Rolling Window"
-    )
-    plt.xlabel("End of Rolling Window Period")
-    plt.ylabel("Portfolio Weight")
-    plt.legend(title="Asset", bbox_to_anchor=(1.05, 1), loc="upper left")
-    plt.grid(True, alpha=0.3)
-
-    # Rotate x-axis labels for better readability
-    plt.xticks(rotation=45)
-
-    # Adjust layout to prevent label cutoff
-    plt.tight_layout()
-    plt.show()
-
-
 def load_and_clean_data(file_path):
     """
     Load Excel file and clean the data to ensure we have proper price series
@@ -247,10 +220,11 @@ def load_and_clean_data(file_path):
 
 
 # File paths
-canada_path = "dataset/canada-price-cad.xls"
-eafe_path = "dataset/eafe-price-cad.xls"
-em_path = "dataset/em-price-cad.xls"
-us_path = "dataset/usa-price-cad.xls"
+canada_path = "dataset/canada-cad-net.xls"
+us_path = "dataset/usa-cad-net.xls"
+eafe_path = "dataset/eafe-cad-net.xls"
+em_path = "dataset/em-cad-net.xls"
+
 
 # Read and clean price data
 print("Loading and cleaning data...")
@@ -375,9 +349,6 @@ for asset in rolling_weights.columns:
     print(f"{asset}:")
     print(f"  Range: {weight_range:.2%}")
     print(f"  Standard Deviation: {rolling_weights[asset].std():.2%}")
-
-# Plot rolling weights
-plot_rolling_weights(rolling_weights)
 
 # Additional analysis: Individual market statistics
 print("\nIndividual Market Statistics (Annualized):")
