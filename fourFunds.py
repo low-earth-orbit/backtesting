@@ -220,10 +220,10 @@ def load_and_clean_data(file_path):
 
 
 # File paths
-canada_path = "dataset/canada-cad-net.xls"
-us_path = "dataset/usa-cad-net.xls"
-eafe_path = "dataset/eafe-cad-net.xls"
-em_path = "dataset/em-cad-net.xls"
+canada_path = "dataset/canada-cad-price.xls"
+us_path = "dataset/usa-cad-price.xls"
+eafe_path = "dataset/eafe-cad-price.xls"
+em_path = "dataset/em-cad-price.xls"
 
 
 # Read and clean price data

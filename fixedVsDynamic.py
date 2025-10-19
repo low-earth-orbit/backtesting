@@ -73,15 +73,25 @@ def calculate_portfolio_metrics(returns_df, weights):
     # correct weighted portfolio aggregation: a = exp(l) - 1
     arith_returns = np.exp(returns_df) - 1
 
+    # Ensure weights align with returns columns and are float
     if isinstance(weights, pd.DataFrame):
-        # For dynamic weights, align dates then compute weighted arithmetic returns
         common_dates = arith_returns.index.intersection(weights.index)
         arith_returns = arith_returns.loc[common_dates]
-        weights = weights.loc[common_dates]
-        portfolio_arith = (arith_returns * weights[arith_returns.columns]).sum(axis=1)
+        # reindex to ensure columns order matches
+        weights = (
+            weights.loc[common_dates]
+            .reindex(columns=arith_returns.columns)
+            .astype(float)
+        )
+        portfolio_arith = (arith_returns * weights).sum(axis=1)
     else:
-        # For fixed weights, elementwise dot with arithmetic returns
-        portfolio_arith = arith_returns.dot(weights)
+        # For fixed weights, convert to Series aligned to returns columns
+        w = pd.Series(weights).reindex(index=arith_returns.columns).astype(float)
+        portfolio_arith = arith_returns.dot(w)
+
+    # Numerical safety: clip arithmetic returns slightly above -1 to avoid log1p domain errors
+    eps = 1e-9
+    portfolio_arith = np.clip(portfolio_arith, -1 + eps, None)
 
     # Convert portfolio arithmetic returns to portfolio log returns for
     # annualization and cum_wealth: ln(1 + r_portfolio)
@@ -204,9 +214,10 @@ for market in ["EAFE", "US"]:
 
 # Strategy 1: Fixed weights
 CANADA_WEIGHT = 0.30  # Fixed Canada allocation
-# Split remaining 70% between EAFE and US (50/50 of the remainder)
-FIXED_EAFE = (1 - CANADA_WEIGHT) * 0.5
-FIXED_US = (1 - CANADA_WEIGHT) * 0.5
+# Split remaining 70% between EAFE and US
+FIXED_US = 0.45
+FIXED_EAFE = 0.25
+
 
 fixed_weights = pd.DataFrame(
     {
@@ -305,16 +316,17 @@ def simulate_portfolio_returns(
     if block_size > n_periods:
         block_size = n_periods
 
+    # safe upper bound for block start sampling
+    max_start = max(1, len(returns_data) - block_size + 1)
+
     # Seed RNG for reproducibility when requested
     rng = np.random.default_rng(seed)
 
     for _ in range(num_simulations):
         # Generate random blocks
         n_blocks = n_periods // block_size + 1
-        # Use rng to draw block starts
-        block_starts = rng.integers(
-            0, len(returns_data) - block_size + 1, size=n_blocks
-        )
+        # Use rng to draw block starts (safe upper bound)
+        block_starts = rng.integers(0, max_start, size=n_blocks)
 
         # Create simulated returns by concatenating blocks
         sim_blocks = []
@@ -327,6 +339,12 @@ def simulate_portfolio_returns(
         # Trim to original length and realign index
         sim_returns = sim_returns.iloc[:n_periods]
         sim_returns.index = original_index
+
+        # ensure finite and reasonable values (drop or clip extreme outliers that would break log1p)
+        sim_returns = sim_returns.replace([np.inf, -np.inf], np.nan).ffill().bfill()
+        sim_returns = sim_returns.clip(
+            lower=-0.99
+        )  # prevent arithmetic <= -1 after exp/log transforms
 
         # Recompute dynamic weights from simulated returns (convert back to prices)
         if isinstance(weights_dynamic, pd.DataFrame):
@@ -400,14 +418,14 @@ def simulate_portfolio_returns(
 
 
 # Print performance comparison
-print("\nStrategy Comparison (historical return series):")
-print("\n1. Fixed Equal Weight Strategy:")
+print("\nStrategy Comparison:")
+print("\n1. Fixed Weight Strategy:")
 print(f"Annual Return: {fixed_metrics['annual_return']:.2%}")
 print(f"Annual Volatility: {fixed_metrics['annual_vol']:.2%}")
 print(f"Sharpe Ratio: {fixed_metrics['sharpe']:.2f}")
 print(f"Final Wealth (starting at 1): {cum_returns_fixed.iloc[-1]:.2f}")
 
-print("\n2. Market Cap Weight Strategy:")
+print("\n2. Market Cap / Dynamic Weight Strategy:")
 print(f"Annual Return: {dynamic_metrics['annual_return']:.2%}")
 print(f"Annual Volatility: {dynamic_metrics['annual_vol']:.2%}")
 print(f"Sharpe Ratio: {dynamic_metrics['sharpe']:.2f}")
@@ -426,11 +444,11 @@ sim_results = simulate_portfolio_returns(
 
 # Calculate probability of dynamic strategy outperformance
 prob_outperform = (sim_results["outperformance"] > 0).mean()
-median_outperform = sim_results["outperformance"].median()
+mean_outperform = sim_results["outperformance"].mean()
 
-print("\nBootstrap Simulation Results (1000 simulations):")
+print("\nBootstrap Simulation Results:")
 print(f"Probability of Market Cap Strategy Outperformance: {prob_outperform:.1%}")
-print(f"Median Outperformance: {median_outperform:.2%}")
+print(f"Mean Outperformance: {mean_outperform:.4%}")
 
 print("\nMarket Cap Weight Strategy Statistics:")
 print(f"Average Annual Return: {sim_results['dynamic_returns'].mean():.2%}")
@@ -467,7 +485,7 @@ plt.figure(figsize=(12, 6))
 plt.hist(sim_results["outperformance"], bins=50, alpha=0.5, color="blue")
 plt.axvline(x=0, color="red", linestyle="--", label="Zero Outperformance")
 plt.axvline(
-    x=median_outperform, color="green", linestyle="-", label="Median Outperformance"
+    x=mean_outperform, color="green", linestyle="-", label="Mean Outperformance"
 )
 plt.title(
     "Distribution of Market Cap Strategy Outperformance\n(Market Cap - Fixed Returns)"

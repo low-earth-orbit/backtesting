@@ -117,8 +117,8 @@ def load_and_clean_data(file_path):
 
 
 # File paths
-canada_path = "dataset/canada-cad-net.xls"
-acwi_path = "dataset/world-ex-canada-cad-net.xls"
+canada_path = "dataset/canada-cad-price.xls"
+acwi_path = "dataset/acwi-cad-price.xls"
 
 # Read and clean price data
 print("Loading and cleaning data...")
