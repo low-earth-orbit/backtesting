@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 
 # Configuration
-LOOKBACK_YEARS = 40  # Number of years of historical data to use for optimization
+LOOKBACK_YEARS = 10  # Number of years of historical data to use for optimization
 ROLLING_WINDOW_YEARS = 12  # Length of rolling window for stability analysis
 WINDOW_STEP_MONTHS = 12  # How often to calculate new weights (annual rebalancing)
 RESAMPLE_ITERATIONS = 1000  # Number of bootstrap iterations for resampled efficiency
@@ -87,29 +87,6 @@ def optimize_resampled_portfolio(returns, n_iterations=RESAMPLE_ITERATIONS):
     return mean_weights, weight_stats
 
 
-def analyze_rolling_weights(returns, window_years, step_months):
-    """
-    Perform rolling window analysis of minimum variance portfolio weights
-    """
-    window_size = window_years * 12  # Convert years to months
-    weights_over_time = []
-    dates = []
-
-    # Calculate weights for each window
-    for start_idx in range(0, len(returns) - window_size, step_months):
-        end_idx = start_idx + window_size
-        window_returns = returns.iloc[start_idx:end_idx]
-        window_cov = window_returns.cov()
-        weights = optimize_min_variance(window_cov)
-        weights_over_time.append(weights)
-        dates.append(returns.index[end_idx - 1])  # Use end of window date
-
-    # Convert to DataFrame for easier analysis
-    weights_df = pd.DataFrame(weights_over_time, columns=returns.columns, index=dates)
-
-    return weights_df
-
-
 def plot_resampled_weights(weight_stats, asset_names):
     """
     Plot the distribution of resampled portfolio weights with confidence intervals
@@ -143,6 +120,7 @@ def plot_resampled_weights(weight_stats, asset_names):
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
     plt.show()
+
 
 def load_and_clean_data(file_path):
     """
@@ -321,43 +299,4 @@ print("\nMinimum Variance Portfolio Allocation:")
 for asset, weight in zip(returns.columns, weights):
     print(f"{asset}: {weight:.2%}")
 
-print(f"\nPortfolio Metrics:")
-print(f"Monthly Volatility: {portfolio_monthly_vol:.2%}")
 print(f"Annual Volatility: {annualized_vol:.2%}")
-
-# Calculate portfolio returns
-portfolio_returns = returns.dot(weights)
-monthly_return = portfolio_returns.mean()
-annual_return = np.exp(monthly_return * 12) - 1  # Properly annualize log returns
-print(f"Expected Annual Return: {annual_return:.2%}")
-print(f"Sharpe Ratio (assuming 0% risk-free rate): {annual_return/annualized_vol:.2f}")
-
-# Perform rolling window analysis
-print("\nPerforming rolling window analysis...")
-rolling_weights = analyze_rolling_weights(
-    returns, ROLLING_WINDOW_YEARS, WINDOW_STEP_MONTHS
-)
-
-# Calculate weight stability metrics
-print(f"\nWeight Stability Analysis ({ROLLING_WINDOW_YEARS}-year rolling windows):")
-print("\nWeight Statistics:")
-print(rolling_weights.describe().round(3))
-
-print("\nWeight Ranges (Min-Max):")
-for asset in rolling_weights.columns:
-    weight_range = rolling_weights[asset].max() - rolling_weights[asset].min()
-    print(f"{asset}:")
-    print(f"  Range: {weight_range:.2%}")
-    print(f"  Standard Deviation: {rolling_weights[asset].std():.2%}")
-
-# Additional analysis: Individual market statistics
-print("\nIndividual Market Statistics (Annualized):")
-for market in returns.columns:
-    market_monthly_return = returns[market].mean()
-    market_annual_return = np.exp(market_monthly_return * 12) - 1
-    market_annual_vol = returns[market].std() * np.sqrt(12)
-    market_sharpe = market_annual_return / market_annual_vol
-    print(f"\n{market}:")
-    print(f"  Annual Return: {market_annual_return:.2%}")
-    print(f"  Annual Volatility: {market_annual_vol:.2%}")
-    print(f"  Sharpe Ratio: {market_sharpe:.2f}")
