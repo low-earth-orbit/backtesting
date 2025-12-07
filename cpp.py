@@ -26,19 +26,19 @@ stock_cov = np.outer(stock_vols, stock_vols) * stock_corr
 # --- Add China Bond ---
 assets = ["A Shares", "HK-listed Stocks", "US Stocks", "Europe Stocks", "China Bond"]
 
-nominal_returns = np.array([0.07, 0.075, 0.065, 0.07, 0.03])
+nominal_returns = np.array([0.055, 0.057, 0.045, 0.05, 0.027])
 fees = np.array([0.0025, 0.014, 0.012, 0.018, 0.003])
 net_returns = nominal_returns - fees
-vols = np.array([0.2176, 0.1930, 0.1446, 0.16, 0.02])
+vols = np.array([0.2727, 0.2293, 0.1594, 0.17, 0.0275])
 
 # Correlation matrix (5x5)
 corr = np.array(
     [
-        [1.00, 0.68, 0.44, 0.44, 0.30],  # A Shares
-        [0.68, 1.00, 0.49, 0.49, 0.10],  # HK Stocks
-        [0.44, 0.49, 1.00, 0.70, 0.10],  # US Stocks
-        [0.44, 0.49, 0.70, 1.00, 0.10],  # Europe Stocks
-        [0.30, 0.10, 0.10, 0.10, 1.00],  # China Bond
+        [1.00, 0.68, 0.27, 0.27, 0.30],  # A Shares
+        [0.68, 1.00, 0.49, 0.49, 0],  # HK Stocks
+        [0.27, 0.49, 1.00, 0.70, 0],  # US Stocks
+        [0.27, 0.49, 0.70, 1.00, 0],  # Europe Stocks
+        [0, 0, 0, 0, 1.00],  # China Bond
     ]
 )
 cov = np.outer(vols, vols) * corr
@@ -47,6 +47,7 @@ cov = np.outer(vols, vols) * corr
 # Min variance optimization
 def portfolio_vol(w, cov):
     return np.sqrt(np.dot(w.T, np.dot(cov, w)))
+
 
 n = len(assets)
 init_guess = np.array([1 / n] * n)
@@ -101,6 +102,7 @@ print_allocation(
     stock_assets,
 )
 
+
 # 3. Risk Parity (stocks only)
 def risk_contribution(weights, cov):
     port_vol = portfolio_vol(weights, cov)
@@ -108,9 +110,11 @@ def risk_contribution(weights, cov):
     rc = weights * mrc / port_vol
     return rc
 
+
 def risk_parity_objective(weights, cov):
     rc = risk_contribution(weights, cov)
     return np.sum((rc - np.mean(rc)) ** 2)
+
 
 stock_rp_result = minimize(
     risk_parity_objective,
@@ -129,11 +133,13 @@ print_allocation(
     stock_assets,
 )
 
+
 # 4. Max Sharpe Ratio (stocks only)
 def neg_sharpe(weights, net_returns, cov):
     port_vol = portfolio_vol(weights, cov)
     port_return = np.dot(weights, net_returns)
     return -port_return / port_vol
+
 
 stock_sharpe_result = minimize(
     neg_sharpe,
