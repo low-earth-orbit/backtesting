@@ -11,7 +11,7 @@ except Exception:
 # --- Asset Classes ---
 stock_assets = ["A Shares", "HK-listed Stocks", "US Stocks", "Europe Stocks"]
 stock_nominal_returns = np.array([0.055, 0.057, 0.045, 0.049])
-stock_fees = np.array([0.002, 0.0135, 0.0101, 0.0197])
+stock_fees = np.array([0.0029, 0.0135, 0.0101, 0.0197])
 stock_net_returns = stock_nominal_returns - stock_fees
 stock_vols = np.array([0.2727, 0.2293, 0.1594, 0.1822])
 stock_corr = np.array(
