@@ -24,7 +24,7 @@ class SimulationAssumptions:
     """
 
     # PROPERTY ASSUMPTIONS
-    house_price = 224_900  # Starting property value
+    house_price = 1_000_000  # Starting property value
     down_payment_pct = 0.20  # 20% down payment
 
     # MORTGAGE ASSUMPTIONS
@@ -41,12 +41,12 @@ class SimulationAssumptions:
     investment_fee_pct = 0.002  # 0.2% MER
 
     # PROPERTY COST ASSUMPTIONS
-    annual_maintenance_pct = 0.033
+    annual_maintenance_pct = 0.018
     # Property tax: Ontario average 0.6-0.8% of property value
-    annual_property_tax_pct = 0.0158
+    annual_property_tax_pct = 0.01
     # Home insurance: Scales with property value
     # Ontario average: ~$1,500/year for $1M home = 0.15% of value
-    annual_home_insurance_pct = 0.0015  # 0.15% annual (scales with home value)
+    annual_home_insurance_pct = 0.002
 
     # PROPERTY APPRECIATION
     # Long-term Canadian property appreciation: 2-3% annually
@@ -261,7 +261,7 @@ class SmithManeuverSimulator:
         results = []
         mortgage_balance = standard_mortgage
         heloc_balance = 0
-        investment_portfolio = standard_down_payment
+        investment_portfolio = 0  # Down payment is home equity, not investment capital
         house_value = self.house_price
 
         for year in range(self.years):

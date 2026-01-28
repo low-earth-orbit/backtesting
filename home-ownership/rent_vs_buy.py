@@ -43,10 +43,10 @@ class RentVsBuyAssumptions:
     annual_rent_pct_of_home_value = None  # Set to None if using fixed monthly rent
 
     # Option 2: Specify as fixed monthly rent (RECOMMENDED)
-    monthly_rent = 1600  # Fixed monthly rent in dollars ($5k/month = $60k/year)
+    monthly_rent = 5000  # Fixed monthly rent in dollars ($5k/month = $60k/year)
 
-    # Rent increases with inflation/market
-    annual_rent_increase = 0.025  # 2.1% per year (inflation-like increases)
+    # Rent increases 
+    annual_rent_increase = 0.025
 
     # Portfolio Strategy
     # Renter invests in all-equity portfolio (100% stocks, 0% bonds/cash)
