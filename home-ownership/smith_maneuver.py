@@ -42,9 +42,9 @@ class SimulationAssumptions:
     investment_fee_pct = 0.002  # 0.2% MER
 
     # PROPERTY COST ASSUMPTIONS
-    annual_maintenance_pct = 0.02  # 2% annual
+    annual_maintenance_pct = 0.0185
     # Property tax: Ontario average 0.6-0.8% of property value
-    annual_property_tax_pct = 0.007  # 0.7% annual (Ontario)
+    annual_property_tax_pct = 0.01
     # Home insurance: Scales with property value
     # Ontario average: ~$1,500/year for $1M home = 0.15% of value
     annual_home_insurance_pct = 0.0015  # 0.15% annual (scales with home value)
@@ -274,7 +274,9 @@ class SmithManeuverSimulator:
                 yearly_data["annual_interest_paid_heloc"] += heloc_interest
 
                 # Monthly investment return
-                monthly_return_rate = (1 + self.annual_investment_return) ** (1 / 12) - 1
+                monthly_return_rate = (1 + self.annual_investment_return) ** (
+                    1 / 12
+                ) - 1
                 investment_gain = investment_portfolio * monthly_return_rate
                 investment_portfolio += investment_gain
                 yearly_data["annual_investment_gain"] += investment_gain
@@ -284,16 +286,26 @@ class SmithManeuverSimulator:
                 investment_portfolio -= investment_tax
 
             # Annual costs
-            yearly_data["annual_property_tax"] = house_value * self.annual_property_tax_pct
-            yearly_data["annual_maintenance"] = house_value * self.annual_maintenance_pct
-            yearly_data["annual_insurance"] = house_value * self.annual_home_insurance_pct
+            yearly_data["annual_property_tax"] = (
+                house_value * self.annual_property_tax_pct
+            )
+            yearly_data["annual_maintenance"] = (
+                house_value * self.annual_maintenance_pct
+            )
+            yearly_data["annual_insurance"] = (
+                house_value * self.annual_home_insurance_pct
+            )
 
             # Investment fees
-            yearly_data["annual_investment_fee"] = investment_portfolio * self.investment_fee_pct
+            yearly_data["annual_investment_fee"] = (
+                investment_portfolio * self.investment_fee_pct
+            )
             investment_portfolio -= yearly_data["annual_investment_fee"]
 
             # Tax benefit: HELOC interest is tax-deductible
-            heloc_interest_deduction_tax_saving = yearly_data["annual_interest_paid_heloc"] * self.marginal_tax_rate
+            heloc_interest_deduction_tax_saving = (
+                yearly_data["annual_interest_paid_heloc"] * self.marginal_tax_rate
+            )
             yearly_data["annual_tax_benefit"] = heloc_interest_deduction_tax_saving
 
             # Property appreciation
@@ -329,7 +341,7 @@ class SmithManeuverSimulator:
         accelerated_payment = self.calculate_monthly_payment(
             self.initial_mortgage, self.mortgage_rate, accelerated_months
         )
-        
+
         # Standard mortgage payment (25 years)
         standard_payment = self.calculate_monthly_payment(
             self.initial_mortgage, self.mortgage_rate, standard_months
@@ -365,7 +377,9 @@ class SmithManeuverSimulator:
             # Process 12 months
             for month in range(12):
                 # Years 0-14: Pay accelerated payment on mortgage
-                if mortgage_balance > 0 and (mortgage_paid_off_year is None or year < 15):
+                if mortgage_balance > 0 and (
+                    mortgage_paid_off_year is None or year < 15
+                ):
                     mortgage_interest = mortgage_balance * monthly_mortgage_rate
                     mortgage_principal = accelerated_payment - mortgage_interest
                     mortgage_balance -= mortgage_principal
@@ -398,7 +412,9 @@ class SmithManeuverSimulator:
                 yearly_data["annual_interest_paid_heloc"] += heloc_interest
 
                 # Monthly investment return
-                monthly_return_rate = (1 + self.annual_investment_return) ** (1 / 12) - 1
+                monthly_return_rate = (1 + self.annual_investment_return) ** (
+                    1 / 12
+                ) - 1
                 investment_gain = investment_portfolio * monthly_return_rate
                 investment_portfolio += investment_gain
                 yearly_data["annual_investment_gain"] += investment_gain
@@ -408,16 +424,26 @@ class SmithManeuverSimulator:
                 investment_portfolio -= investment_tax
 
             # Annual costs
-            yearly_data["annual_property_tax"] = house_value * self.annual_property_tax_pct
-            yearly_data["annual_maintenance"] = house_value * self.annual_maintenance_pct
-            yearly_data["annual_insurance"] = house_value * self.annual_home_insurance_pct
+            yearly_data["annual_property_tax"] = (
+                house_value * self.annual_property_tax_pct
+            )
+            yearly_data["annual_maintenance"] = (
+                house_value * self.annual_maintenance_pct
+            )
+            yearly_data["annual_insurance"] = (
+                house_value * self.annual_home_insurance_pct
+            )
 
             # Investment fees
-            yearly_data["annual_investment_fee"] = investment_portfolio * self.investment_fee_pct
+            yearly_data["annual_investment_fee"] = (
+                investment_portfolio * self.investment_fee_pct
+            )
             investment_portfolio -= yearly_data["annual_investment_fee"]
 
             # Tax benefit: HELOC interest is tax-deductible
-            heloc_interest_deduction_tax_saving = yearly_data["annual_interest_paid_heloc"] * self.marginal_tax_rate
+            heloc_interest_deduction_tax_saving = (
+                yearly_data["annual_interest_paid_heloc"] * self.marginal_tax_rate
+            )
             yearly_data["annual_tax_benefit"] = heloc_interest_deduction_tax_saving
 
             # Property appreciation
@@ -515,14 +541,16 @@ class SmithManeuverSimulator:
                 yearly_data["annual_interest_paid_heloc"] += heloc_interest
 
                 # Monthly investment returns for both portfolios
-                monthly_return_rate = (1 + self.annual_investment_return) ** (1 / 12) - 1
-                
+                monthly_return_rate = (1 + self.annual_investment_return) ** (
+                    1 / 12
+                ) - 1
+
                 # HELOC portfolio: gains are taxed
                 heloc_gain = heloc_investment * monthly_return_rate
                 heloc_investment += heloc_gain
                 heloc_tax = heloc_gain * self.marginal_tax_rate
                 heloc_investment -= heloc_tax
-                
+
                 # Non-reg portfolio: gains are also taxed (no deduction for HELOC interest here)
                 nonreg_gain = nonreg_investment * monthly_return_rate
                 nonreg_investment += nonreg_gain
@@ -530,9 +558,15 @@ class SmithManeuverSimulator:
                 nonreg_investment -= nonreg_tax
 
             # Annual costs
-            yearly_data["annual_property_tax"] = house_value * self.annual_property_tax_pct
-            yearly_data["annual_maintenance"] = house_value * self.annual_maintenance_pct
-            yearly_data["annual_insurance"] = house_value * self.annual_home_insurance_pct
+            yearly_data["annual_property_tax"] = (
+                house_value * self.annual_property_tax_pct
+            )
+            yearly_data["annual_maintenance"] = (
+                house_value * self.annual_maintenance_pct
+            )
+            yearly_data["annual_insurance"] = (
+                house_value * self.annual_home_insurance_pct
+            )
 
             # Investment fees on both portfolios
             heloc_fee = heloc_investment * self.investment_fee_pct
@@ -541,7 +575,9 @@ class SmithManeuverSimulator:
             nonreg_investment -= nonreg_fee
 
             # Tax benefit: HELOC interest is tax-deductible
-            heloc_interest_deduction_tax_saving = yearly_data["annual_interest_paid_heloc"] * self.marginal_tax_rate
+            heloc_interest_deduction_tax_saving = (
+                yearly_data["annual_interest_paid_heloc"] * self.marginal_tax_rate
+            )
             yearly_data["annual_tax_benefit"] = heloc_interest_deduction_tax_saving
 
             # Property appreciation
@@ -556,9 +592,15 @@ class SmithManeuverSimulator:
             yearly_data["heloc_investment"] = heloc_investment
             yearly_data["nonreg_investment"] = nonreg_investment
             yearly_data["total_investment"] = heloc_investment + nonreg_investment
-            yearly_data["gross_net_worth"] = house_value + heloc_investment + nonreg_investment
+            yearly_data["gross_net_worth"] = (
+                house_value + heloc_investment + nonreg_investment
+            )
             yearly_data["net_net_worth"] = (
-                house_value + heloc_investment + nonreg_investment - mortgage_balance - heloc_balance
+                house_value
+                + heloc_investment
+                + nonreg_investment
+                - mortgage_balance
+                - heloc_balance
             )
 
             results.append(yearly_data)
@@ -568,7 +610,7 @@ class SmithManeuverSimulator:
     def simulate_smith_accelerated(self) -> pd.DataFrame:
         """
         Simulate Smith Maneuver with Accelerated Mortgage Payoff.
-        
+
         Strategy: Pay down mortgage on aggressive schedule (e.g., 15-year amortization),
         but use HELOC to invest the "excess" cash that would go to accelerated principal.
         This maximizes investment growth while still paying down debt faster.
@@ -576,7 +618,7 @@ class SmithManeuverSimulator:
         # Use accelerated amortization (15 years instead of 25)
         accelerated_months = 15 * 12
         standard_months = self.mortgage_term_years * 12
-        
+
         monthly_mortgage_rate = self.mortgage_rate / 12
         monthly_heloc_rate = self.heloc_rate / 12
 
@@ -587,7 +629,7 @@ class SmithManeuverSimulator:
         standard_monthly_payment = self.calculate_monthly_payment(
             self.initial_mortgage, self.mortgage_rate, standard_months
         )
-        
+
         # The "excess" is the difference between accelerated and standard payment
         excess_payment = accelerated_monthly_payment - standard_monthly_payment
 
@@ -596,7 +638,7 @@ class SmithManeuverSimulator:
         heloc_balance = 0
         investment_portfolio = 0
         house_value = self.house_price
-        
+
         for year in range(self.years):
             yearly_data = {
                 "year": year,
@@ -629,7 +671,9 @@ class SmithManeuverSimulator:
                     mortgage_balance = max(0, mortgage_balance)
 
                     yearly_data["annual_interest_paid_mortgage"] += mortgage_interest
-                    yearly_data["annual_mortgage_payment"] += accelerated_monthly_payment
+                    yearly_data[
+                        "annual_mortgage_payment"
+                    ] += accelerated_monthly_payment
                     yearly_data["annual_accelerated_payment"] += excess_payment
 
                     # Use HELOC to invest the excess payment amount
@@ -643,7 +687,9 @@ class SmithManeuverSimulator:
                 yearly_data["annual_interest_paid_heloc"] += heloc_interest
 
                 # Monthly investment return
-                monthly_return_rate = (1 + self.annual_investment_return) ** (1 / 12) - 1
+                monthly_return_rate = (1 + self.annual_investment_return) ** (
+                    1 / 12
+                ) - 1
                 investment_gain = investment_portfolio * monthly_return_rate
                 investment_portfolio += investment_gain
                 yearly_data["annual_investment_gain"] += investment_gain
@@ -651,7 +697,7 @@ class SmithManeuverSimulator:
                 # Deduct investment taxes
                 investment_tax = investment_gain * self.marginal_tax_rate
                 investment_portfolio -= investment_tax
-                
+
                 yearly_data["annual_excess_invested"] += excess_payment
 
             # Annual costs
@@ -703,11 +749,18 @@ class SmithManeuverSimulator:
         smith_accelerated = self.simulate_smith_accelerated()
         return traditional, smith, smith_accelerated
 
-    def print_summary(self, traditional: pd.DataFrame, smith: pd.DataFrame, smith_accelerated: pd.DataFrame = None) -> None:
+    def print_summary(
+        self,
+        traditional: pd.DataFrame,
+        smith: pd.DataFrame,
+        smith_accelerated: pd.DataFrame = None,
+    ) -> None:
         """Print summary comparison of scenarios."""
         final_year_trad = traditional.iloc[-1]
         final_year_smith = smith.iloc[-1]
-        final_year_smith_accel = smith_accelerated.iloc[-1] if smith_accelerated is not None else None
+        final_year_smith_accel = (
+            smith_accelerated.iloc[-1] if smith_accelerated is not None else None
+        )
 
         print("=" * 80)
         print("SMITH MANEUVER SIMULATION SUMMARY - ALL SCENARIOS")
@@ -747,7 +800,9 @@ class SmithManeuverSimulator:
         )
 
         print("\n" + "=" * 80)
-        print("SCENARIO 2: SMITH MANEUVER (Standard 25-year Mortgage + HELOC Investing)")
+        print(
+            "SCENARIO 2: SMITH MANEUVER (Standard 25-year Mortgage + HELOC Investing)"
+        )
         print("=" * 80)
         print(f"Final House Value: ${final_year_smith['house_value']:,.0f}")
         print(f"Final Mortgage Balance: ${final_year_smith['mortgage_balance']:,.0f}")
@@ -775,28 +830,50 @@ class SmithManeuverSimulator:
 
         if smith_accelerated is not None:
             print("\n" + "=" * 80)
-            print("SCENARIO 3: SMITH MANEUVER ACCELERATED (15-year Mortgage + HELOC Investing)")
+            print(
+                "SCENARIO 3: SMITH MANEUVER ACCELERATED (15-year Mortgage + HELOC Investing)"
+            )
             print("=" * 80)
             print(f"Final House Value: ${final_year_smith_accel['house_value']:,.0f}")
-            print(f"Final Mortgage Balance: ${final_year_smith_accel['mortgage_balance']:,.0f}")
-            print(f"Final HELOC Balance: ${final_year_smith_accel['heloc_balance']:,.0f}")
+            print(
+                f"Final Mortgage Balance: ${final_year_smith_accel['mortgage_balance']:,.0f}"
+            )
+            print(
+                f"Final HELOC Balance: ${final_year_smith_accel['heloc_balance']:,.0f}"
+            )
             print(
                 f"Final Investment Portfolio: ${final_year_smith_accel['investment_portfolio']:,.0f}"
             )
-            print(f"Total Mortgage Paid: ${smith_accelerated['annual_mortgage_payment'].sum():,.0f}")
+            print(
+                f"Total Mortgage Paid: ${smith_accelerated['annual_mortgage_payment'].sum():,.0f}"
+            )
             print(
                 f"Total Mortgage Interest: ${smith_accelerated['annual_interest_paid_mortgage'].sum():,.0f}"
             )
             print(
                 f"Total HELOC Interest: ${smith_accelerated['annual_interest_paid_heloc'].sum():,.0f}"
             )
-            print(f"Total HELOC Borrowed: ${smith_accelerated['annual_heloc_borrowing'].sum():,.0f}")
-            print(f"Total Accelerated Principal: ${smith_accelerated['annual_accelerated_payment'].sum():,.0f}")
-            print(f"Total Property Tax: ${smith_accelerated['annual_property_tax'].sum():,.0f}")
-            print(f"Total Maintenance: ${smith_accelerated['annual_maintenance'].sum():,.0f}")
-            print(f"Total Insurance: ${smith_accelerated['annual_insurance'].sum():,.0f}")
-            print(f"Total Investment Fees: ${smith_accelerated['annual_investment_fee'].sum():,.0f}")
-            print(f"Total Tax Benefits: ${smith_accelerated['annual_tax_benefit'].sum():,.0f}")
+            print(
+                f"Total HELOC Borrowed: ${smith_accelerated['annual_heloc_borrowing'].sum():,.0f}"
+            )
+            print(
+                f"Total Accelerated Principal: ${smith_accelerated['annual_accelerated_payment'].sum():,.0f}"
+            )
+            print(
+                f"Total Property Tax: ${smith_accelerated['annual_property_tax'].sum():,.0f}"
+            )
+            print(
+                f"Total Maintenance: ${smith_accelerated['annual_maintenance'].sum():,.0f}"
+            )
+            print(
+                f"Total Insurance: ${smith_accelerated['annual_insurance'].sum():,.0f}"
+            )
+            print(
+                f"Total Investment Fees: ${smith_accelerated['annual_investment_fee'].sum():,.0f}"
+            )
+            print(
+                f"Total Tax Benefits: ${smith_accelerated['annual_tax_benefit'].sum():,.0f}"
+            )
             print(f"Gross Net Worth: ${final_year_smith_accel['gross_net_worth']:,.0f}")
             print(
                 f"Net Net Worth (Gross - Mortgage - HELOC): ${final_year_smith_accel['net_net_worth']:,.0f}"
@@ -808,21 +885,35 @@ class SmithManeuverSimulator:
         difference_smith_net = (
             final_year_smith["net_net_worth"] - final_year_trad["net_net_worth"]
         )
-        print(f"Smith vs Traditional: ${difference_smith_net:,.0f} ({(difference_smith_net/final_year_trad['net_net_worth']*100):.2f}%)")
-        print(f"  Smith Maneuver is {'BETTER' if difference_smith_net > 0 else 'WORSE'} by ${abs(difference_smith_net):,.0f}")
-        
+        print(
+            f"Smith vs Traditional: ${difference_smith_net:,.0f} ({(difference_smith_net/final_year_trad['net_net_worth']*100):.2f}%)"
+        )
+        print(
+            f"  Smith Maneuver is {'BETTER' if difference_smith_net > 0 else 'WORSE'} by ${abs(difference_smith_net):,.0f}"
+        )
+
         if smith_accelerated is not None:
             difference_accel_net = (
-                final_year_smith_accel["net_net_worth"] - final_year_trad["net_net_worth"]
+                final_year_smith_accel["net_net_worth"]
+                - final_year_trad["net_net_worth"]
             )
             difference_accel_vs_smith = (
-                final_year_smith_accel["net_net_worth"] - final_year_smith["net_net_worth"]
+                final_year_smith_accel["net_net_worth"]
+                - final_year_smith["net_net_worth"]
             )
-            print(f"\nSmith Accelerated vs Traditional: ${difference_accel_net:,.0f} ({(difference_accel_net/final_year_trad['net_net_worth']*100):.2f}%)")
-            print(f"  Smith Accelerated is {'BETTER' if difference_accel_net > 0 else 'WORSE'} by ${abs(difference_accel_net):,.0f}")
-            
-            print(f"\nSmith Accelerated vs Smith Standard: ${difference_accel_vs_smith:,.0f}")
-            print(f"  Accelerated is {'BETTER' if difference_accel_vs_smith > 0 else 'WORSE'} by ${abs(difference_accel_vs_smith):,.0f}")
+            print(
+                f"\nSmith Accelerated vs Traditional: ${difference_accel_net:,.0f} ({(difference_accel_net/final_year_trad['net_net_worth']*100):.2f}%)"
+            )
+            print(
+                f"  Smith Accelerated is {'BETTER' if difference_accel_net > 0 else 'WORSE'} by ${abs(difference_accel_net):,.0f}"
+            )
+
+            print(
+                f"\nSmith Accelerated vs Smith Standard: ${difference_accel_vs_smith:,.0f}"
+            )
+            print(
+                f"  Accelerated is {'BETTER' if difference_accel_vs_smith > 0 else 'WORSE'} by ${abs(difference_accel_vs_smith):,.0f}"
+            )
 
     def plot_comparison(self, traditional: pd.DataFrame, smith: pd.DataFrame) -> None:
         """Create visualization comparing both scenarios."""
@@ -949,7 +1040,7 @@ def main():
     simulator = SmithManeuverSimulator()
 
     print("\nRunning Smith Maneuver simulation - 4 scenarios (25 years)...\n")
-    
+
     # Run all 4 scenarios
     traditional = simulator.simulate_traditional()
     smith_standard = simulator.simulate_smith_maneuver()
@@ -968,7 +1059,9 @@ def main():
     print("=" * 100)
     print(f"\nInitial Assumptions:")
     print(f"  House Price: ${simulator.house_price:,.0f}")
-    print(f"  Down Payment: ${simulator.down_payment:,.0f} ({simulator.down_payment_pct*100:.0f}%)")
+    print(
+        f"  Down Payment: ${simulator.down_payment:,.0f} ({simulator.down_payment_pct*100:.0f}%)"
+    )
     print(f"  Initial Mortgage: ${simulator.initial_mortgage:,.0f}")
     print(f"  Mortgage Rate: {simulator.mortgage_rate*100:.2f}%")
     print(f"  HELOC Rate: {simulator.heloc_rate*100:.2f}%")
@@ -993,12 +1086,16 @@ def main():
     print(f"Final Investment Portfolio: ${smith_final['investment_portfolio']:,.0f}")
     print(f"Gross Net Worth: ${smith_final['gross_net_worth']:,.0f}")
     print(f"Net Net Worth (after debt): ${smith_final['net_net_worth']:,.0f}")
-    smith_advantage = smith_final['net_net_worth'] - trad_final['net_net_worth']
-    print(f"Advantage vs Traditional: +${smith_advantage:,.0f} ({smith_advantage/trad_final['net_net_worth']*100:.2f}%)")
+    smith_advantage = smith_final["net_net_worth"] - trad_final["net_net_worth"]
+    print(
+        f"Advantage vs Traditional: +${smith_advantage:,.0f} ({smith_advantage/trad_final['net_net_worth']*100:.2f}%)"
+    )
 
     # Scenario 3: Smith Accelerated with Leverage
     print("\n" + "=" * 100)
-    print("SCENARIO 3: SMITH ACCELERATED + LEVERAGE (15-year mortgage + continued HELOC investing)")
+    print(
+        "SCENARIO 3: SMITH ACCELERATED + LEVERAGE (15-year mortgage + continued HELOC investing)"
+    )
     print("=" * 100)
     print(f"Final House Value: ${accel_final['house_value']:,.0f}")
     print(f"Final Mortgage Balance: ${accel_final['mortgage_balance']:,.0f}")
@@ -1006,14 +1103,20 @@ def main():
     print(f"Final Investment Portfolio: ${accel_final['investment_portfolio']:,.0f}")
     print(f"Gross Net Worth: ${accel_final['gross_net_worth']:,.0f}")
     print(f"Net Net Worth (after debt): ${accel_final['net_net_worth']:,.0f}")
-    accel_advantage = accel_final['net_net_worth'] - trad_final['net_net_worth']
-    accel_vs_smith = accel_final['net_net_worth'] - smith_final['net_net_worth']
-    print(f"Advantage vs Traditional: +${accel_advantage:,.0f} ({accel_advantage/trad_final['net_net_worth']*100:.2f}%)")
-    print(f"vs Smith Standard: {'+' if accel_vs_smith > 0 else ''} ${accel_vs_smith:,.0f}")
+    accel_advantage = accel_final["net_net_worth"] - trad_final["net_net_worth"]
+    accel_vs_smith = accel_final["net_net_worth"] - smith_final["net_net_worth"]
+    print(
+        f"Advantage vs Traditional: +${accel_advantage:,.0f} ({accel_advantage/trad_final['net_net_worth']*100:.2f}%)"
+    )
+    print(
+        f"vs Smith Standard: {'+' if accel_vs_smith > 0 else ''} ${accel_vs_smith:,.0f}"
+    )
 
     # Scenario 4: Smith + Non-Reg
     print("\n" + "=" * 100)
-    print("SCENARIO 4: SMITH + NON-REG (Standard mortgage + HELOC + taxable non-reg investing)")
+    print(
+        "SCENARIO 4: SMITH + NON-REG (Standard mortgage + HELOC + taxable non-reg investing)"
+    )
     print("=" * 100)
     print(f"Final House Value: ${nonreg_final['house_value']:,.0f}")
     print(f"Final Mortgage Balance: ${nonreg_final['mortgage_balance']:,.0f}")
@@ -1023,9 +1126,11 @@ def main():
     print(f"Total Investment: ${nonreg_final['total_investment']:,.0f}")
     print(f"Gross Net Worth: ${nonreg_final['gross_net_worth']:,.0f}")
     print(f"Net Net Worth (after debt): ${nonreg_final['net_net_worth']:,.0f}")
-    nonreg_advantage = nonreg_final['net_net_worth'] - trad_final['net_net_worth']
-    nonreg_vs_smith = nonreg_final['net_net_worth'] - smith_final['net_net_worth']
-    print(f"Advantage vs Traditional: +${nonreg_advantage:,.0f} ({nonreg_advantage/trad_final['net_net_worth']*100:.2f}%)")
+    nonreg_advantage = nonreg_final["net_net_worth"] - trad_final["net_net_worth"]
+    nonreg_vs_smith = nonreg_final["net_net_worth"] - smith_final["net_net_worth"]
+    print(
+        f"Advantage vs Traditional: +${nonreg_advantage:,.0f} ({nonreg_advantage/trad_final['net_net_worth']*100:.2f}%)"
+    )
     print(f"vs Smith Standard: +${nonreg_vs_smith:,.0f}")
 
     # Comparison Summary
@@ -1034,10 +1139,18 @@ def main():
     print("=" * 100)
     print(f"\n{'Scenario':<45} {'Net Worth':<20} {'Advantage':<20}")
     print("-" * 85)
-    print(f"{'1. Traditional (25yr std mortgage)':<45} ${trad_final['net_net_worth']:>18,.0f} {'Baseline':<20}")
-    print(f"{'2. Smith Standard (HELOC investing)':<45} ${smith_final['net_net_worth']:>18,.0f} +${smith_advantage:>17,.0f}")
-    print(f"{'3. Smith Accel + Leverage (15yr + HELOC)':<45} ${accel_final['net_net_worth']:>18,.0f} +${accel_advantage:>17,.0f}")
-    print(f"{'4. Smith + Non-Reg (std + non-reg invest)':<45} ${nonreg_final['net_net_worth']:>18,.0f} +${nonreg_advantage:>17,.0f}")
+    print(
+        f"{'1. Traditional (25yr std mortgage)':<45} ${trad_final['net_net_worth']:>18,.0f} {'Baseline':<20}"
+    )
+    print(
+        f"{'2. Smith Standard (HELOC investing)':<45} ${smith_final['net_net_worth']:>18,.0f} +${smith_advantage:>17,.0f}"
+    )
+    print(
+        f"{'3. Smith Accel + Leverage (15yr + HELOC)':<45} ${accel_final['net_net_worth']:>18,.0f} +${accel_advantage:>17,.0f}"
+    )
+    print(
+        f"{'4. Smith + Non-Reg (std + non-reg invest)':<45} ${nonreg_final['net_net_worth']:>18,.0f} +${nonreg_advantage:>17,.0f}"
+    )
 
     # Key Comparisons
     print("\n" + "=" * 100)
@@ -1048,21 +1161,39 @@ def main():
     print(f"   (Tax-deductible HELOC debt benefits)")
 
     print(f"\n2. Accelerated Payoff + Continued Leverage:")
-    print(f"   Smith Accelerated vs Smith Standard: {'+' if accel_vs_smith > 0 else ''} ${accel_vs_smith:,.0f}")
-    print(f"   (Mortgage paid in 15 years vs 25, but using excess for continued HELOC investing)")
+    print(
+        f"   Smith Accelerated vs Smith Standard: {'+' if accel_vs_smith > 0 else ''} ${accel_vs_smith:,.0f}"
+    )
+    print(
+        f"   (Mortgage paid in 15 years vs 25, but using excess for continued HELOC investing)"
+    )
 
     print(f"\n3. Non-Registered Account Alternative:")
     print(f"   Smith + Non-Reg vs Smith Standard: +${nonreg_vs_smith:,.0f}")
     print(f"   (Investing excess in taxable account adds extra capital)")
 
     print(f"\n4. Best Case (Smith + Non-Reg):")
-    print(f"   Total advantage over Traditional: +${nonreg_advantage:,.0f} ({nonreg_advantage/trad_final['net_net_worth']*100:.1f}%)")
+    print(
+        f"   Total advantage over Traditional: +${nonreg_advantage:,.0f} ({nonreg_advantage/trad_final['net_net_worth']*100:.1f}%)"
+    )
 
     # Export results
-    traditional.to_csv("/Users/leohong/backtesting/home-ownership/scenario_1_traditional.csv", index=False)
-    smith_standard.to_csv("/Users/leohong/backtesting/home-ownership/scenario_2_smith_standard.csv", index=False)
-    smith_accelerated.to_csv("/Users/leohong/backtesting/home-ownership/scenario_3_smith_accelerated.csv", index=False)
-    smith_nonreg.to_csv("/Users/leohong/backtesting/home-ownership/scenario_4_smith_nonreg.csv", index=False)
+    traditional.to_csv(
+        "/Users/leohong/backtesting/home-ownership/scenario_1_traditional.csv",
+        index=False,
+    )
+    smith_standard.to_csv(
+        "/Users/leohong/backtesting/home-ownership/scenario_2_smith_standard.csv",
+        index=False,
+    )
+    smith_accelerated.to_csv(
+        "/Users/leohong/backtesting/home-ownership/scenario_3_smith_accelerated.csv",
+        index=False,
+    )
+    smith_nonreg.to_csv(
+        "/Users/leohong/backtesting/home-ownership/scenario_4_smith_nonreg.csv",
+        index=False,
+    )
     print("\n✓ Detailed results exported to CSV files")
 
 
