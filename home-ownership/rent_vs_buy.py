@@ -45,7 +45,7 @@ class RentVsBuyAssumptions:
     # Option 2: Specify as fixed monthly rent (RECOMMENDED)
     monthly_rent = 5000  # Fixed monthly rent in dollars ($5k/month = $60k/year)
 
-    # Rent increases 
+    # Rent increases
     annual_rent_increase = 0.025
 
     # Portfolio Strategy
@@ -1110,7 +1110,7 @@ class RentVsBuyCalculator:
             rent_networth,
             marker="o",
             linewidth=2.5,
-            label="Rent (no leverage)",
+            label="Rent",
             color="#FFB84D",  # Light orange
         )
         plt.plot(
@@ -1118,7 +1118,7 @@ class RentVsBuyCalculator:
             rent_margin_125_networth,
             marker="s",
             linewidth=2.5,
-            label="Rent (1.25x margin)",
+            label="Rent (1.25x)",
             color="#FF9F1C",  # Medium orange
         )
         plt.plot(
@@ -1126,7 +1126,7 @@ class RentVsBuyCalculator:
             rent_margin_135_networth,
             marker="^",
             linewidth=2.5,
-            label="Rent (1.35x margin)",
+            label="Rent (1.35x)",
             color="#E67E22",  # Dark orange
         )
 
@@ -1136,7 +1136,7 @@ class RentVsBuyCalculator:
             buy_trad_networth,
             marker="D",
             linewidth=2.5,
-            label="Buy Traditional",
+            label="Buy",
             color="#87CEEB",  # Light blue
         )
         plt.plot(
@@ -1144,7 +1144,7 @@ class RentVsBuyCalculator:
             buy_smith_light_networth,
             marker="v",
             linewidth=2.5,
-            label="Smith Light (50% LTV)",
+            label="Buy (SM 50% LTV)",
             color="#4A90E2",  # Medium blue
         )
         plt.plot(
@@ -1152,7 +1152,7 @@ class RentVsBuyCalculator:
             buy_smith_median_networth,
             marker="p",
             linewidth=2.5,
-            label="Smith Median (65% LTV)",
+            label="Buy (SM 65% LTV)",
             color="#2E5C8A",  # Darker blue
         )
         plt.plot(
@@ -1161,7 +1161,7 @@ class RentVsBuyCalculator:
             marker="*",
             linewidth=3,
             markersize=15,
-            label="Smith Heavy (80% LTV)",
+            label="Buy (SM 80% LTV)",
             color="#1A3A52",  # Very dark blue
         )
 
@@ -1188,29 +1188,29 @@ class RentVsBuyCalculator:
             shadow=True,
         )
 
-        # Add group labels as text annotations
-        legend_y_top = 0.98
-        ax.text(
-            0.01,
-            legend_y_top,
-            "RENT SCENARIOS (Orange)",
-            transform=ax.transAxes,
-            fontsize=9,
-            fontweight="bold",
-            color="#E67E22",
-            verticalalignment="top",
-        )
+        # # Add group labels as text annotations
+        # legend_y_top = 0.98
+        # ax.text(
+        #     0.01,
+        #     legend_y_top,
+        #     "RENT SCENARIOS (Orange)",
+        #     transform=ax.transAxes,
+        #     fontsize=9,
+        #     fontweight="bold",
+        #     color="#E67E22",
+        #     verticalalignment="top",
+        # )
 
-        ax.text(
-            0.01,
-            legend_y_top - 0.18,
-            "BUY SCENARIOS (Blue)",
-            transform=ax.transAxes,
-            fontsize=9,
-            fontweight="bold",
-            color="#1A3A52",
-            verticalalignment="top",
-        )
+        # ax.text(
+        #     0.01,
+        #     legend_y_top - 0.18,
+        #     "BUY SCENARIOS (Blue)",
+        #     transform=ax.transAxes,
+        #     fontsize=9,
+        #     fontweight="bold",
+        #     color="#1A3A52",
+        #     verticalalignment="top",
+        # )
 
         plt.grid(True, alpha=0.3)
 
