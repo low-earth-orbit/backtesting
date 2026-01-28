@@ -1168,7 +1168,7 @@ class RentVsBuyCalculator:
         plt.xlabel("Years", fontsize=12, fontweight="bold")
         plt.ylabel("Net Worth ($)", fontsize=12, fontweight="bold")
         plt.title(
-            "Net Worth Comparison: Rent vs Buy (Traditional vs Smith with Stress Scenarios)\n25-Year Horizon",
+            "Net Worth Comparison: Rent vs Buy\n25-Year Horizon",
             fontsize=14,
             fontweight="bold",
             pad=20,
