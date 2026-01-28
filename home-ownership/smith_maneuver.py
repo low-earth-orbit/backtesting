@@ -9,9 +9,8 @@ The Smith Maneuver converts non-deductible mortgage debt into tax-deductible
 investment loan debt, potentially providing tax benefits.
 """
 
-import numpy as np
 import pandas as pd
-from typing import Dict, List, Tuple
+from typing import Tuple
 import matplotlib.pyplot as plt
 
 
@@ -25,7 +24,7 @@ class SimulationAssumptions:
     """
 
     # PROPERTY ASSUMPTIONS
-    house_price = 1_000_000  # Starting property value
+    house_price = 224_900  # Starting property value
     down_payment_pct = 0.20  # 20% down payment
 
     # MORTGAGE ASSUMPTIONS
@@ -42,9 +41,9 @@ class SimulationAssumptions:
     investment_fee_pct = 0.002  # 0.2% MER
 
     # PROPERTY COST ASSUMPTIONS
-    annual_maintenance_pct = 0.0185
+    annual_maintenance_pct = 0.033
     # Property tax: Ontario average 0.6-0.8% of property value
-    annual_property_tax_pct = 0.01
+    annual_property_tax_pct = 0.0158
     # Home insurance: Scales with property value
     # Ontario average: ~$1,500/year for $1M home = 0.15% of value
     annual_home_insurance_pct = 0.0015  # 0.15% annual (scales with home value)
@@ -82,6 +81,7 @@ class SmithManeuverSimulator:
         marginal_tax_rate: float = None,
         inflation_rate: float = None,
         years: int = None,
+        combined_ltv_target: float = None,
     ):
         """
         Initialize simulator with parameters.
@@ -124,6 +124,12 @@ class SmithManeuverSimulator:
         self.marginal_tax_rate = marginal_tax_rate or assumptions.marginal_tax_rate
         self.inflation_rate = inflation_rate or assumptions.inflation_rate
         self.years = years or assumptions.years
+
+        # Combined LTV target for stress scenarios (0.50 = 50%, 0.65 = 65%, 0.80 = 80%)
+        # Determines how much leverage is used in Smith Maneuver
+        self.combined_ltv_target = (
+            combined_ltv_target or 0.80
+        )  # Default to traditional 80% LTV
 
     def calculate_monthly_payment(
         self, principal: float, annual_rate: float, months: int
@@ -216,20 +222,46 @@ class SmithManeuverSimulator:
         return pd.DataFrame(results)
 
     def simulate_smith_maneuver(self) -> pd.DataFrame:
-        """Simulate Smith Maneuver strategy with standard 25-year mortgage."""
+        """Simulate Smith Maneuver strategy with LTV-based leverage control.
+
+        The combined_ltv_target controls the MAXIMUM safe total debt (mortgage + HELOC):
+        - 0.50 (Light): 50% LTV cap - conservative, can survive 50% property drop
+        - 0.65 (Median): 65% LTV cap - moderate, can survive 35% property drop
+        - 0.80 (Heavy): 80% LTV cap - aggressive, traditional lending standard
+
+        KEY INSIGHT: All scenarios start with SAME down payment ($44,980 = 20%)
+        and SAME initial mortgage ($179,920 = 80%), but have different safety caps
+        on total debt. This caps how much they can borrow via HELOC while applying
+        the Smith Maneuver strategy.
+
+        - Light (50% LTV):  Down=$44,980, Mortgage=$179,920, HELOC cap=0 (already over cap)
+        - Median (65% LTV): Down=$44,980, Mortgage=$179,920, HELOC cap=$0 (already at/over)
+        - Heavy (80% LTV):  Down=$44,980, Mortgage=$179,920, HELOC cap=$0 (at cap)
+
+        The debt cap works by: when total debt (mortgage + HELOC) exceeds the limit,
+        extra principal from mortgage paydown isn't redirected to HELOC - instead it
+        pays down debt or goes to savings.
+        """
         months = self.mortgage_term_years * 12
         monthly_mortgage_rate = self.mortgage_rate / 12
         monthly_heloc_rate = self.heloc_rate / 12
 
-        # Standard mortgage payment
+        # All scenarios use standard 80% mortgage and 20% down payment
+        standard_down_payment = self.house_price * self.down_payment_pct
+        standard_mortgage = self.house_price * (1 - self.down_payment_pct)
+
+        # Maximum total debt cap based on LTV target
+        max_total_debt = self.house_price * self.combined_ltv_target
+
+        # Standard mortgage payment (all scenarios same)
         monthly_mortgage_payment = self.calculate_monthly_payment(
-            self.initial_mortgage, self.mortgage_rate, months
+            standard_mortgage, self.mortgage_rate, months
         )
 
         results = []
-        mortgage_balance = self.initial_mortgage
+        mortgage_balance = standard_mortgage
         heloc_balance = 0
-        investment_portfolio = 0
+        investment_portfolio = standard_down_payment
         house_value = self.house_price
 
         for year in range(self.years):
@@ -263,15 +295,19 @@ class SmithManeuverSimulator:
                     yearly_data["annual_interest_paid_mortgage"] += mortgage_interest
                     yearly_data["annual_mortgage_payment"] += monthly_mortgage_payment
 
-                    # Redirect principal to HELOC for investing
-                    heloc_borrow = mortgage_principal
-                    heloc_balance += heloc_borrow
-                    yearly_data["annual_heloc_borrowing"] += heloc_borrow
-                    investment_portfolio += heloc_borrow
+                    # Only redirect principal to HELOC if we can stay under debt cap
+                    current_total_debt = mortgage_balance + heloc_balance
 
-                # Monthly HELOC interest
-                heloc_interest = heloc_balance * monthly_heloc_rate
-                yearly_data["annual_interest_paid_heloc"] += heloc_interest
+                    if current_total_debt <= max_total_debt:
+                        # We're under the cap - can borrow via HELOC
+                        available_debt_room = max_total_debt - current_total_debt
+                        heloc_borrow = min(mortgage_principal, available_debt_room)
+
+                        if heloc_borrow > 0:
+                            heloc_balance += heloc_borrow
+                            yearly_data["annual_heloc_borrowing"] += heloc_borrow
+                            investment_portfolio += heloc_borrow
+                    # If over cap, the principal just paid down debt (no HELOC borrow)
 
                 # Monthly investment return
                 monthly_return_rate = (1 + self.annual_investment_return) ** (
