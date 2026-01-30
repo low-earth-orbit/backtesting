@@ -29,15 +29,17 @@ class SimulationAssumptions:
 
     # MORTGAGE ASSUMPTIONS
     # Mortgage rate based on: Canadian neutral policy rate (~2.5%) + mortgage premium (~2%)
-    mortgage_rate = 0.045
+    mortgage_rate = 0.042
     mortgage_term_years = 25  # 25-year amortization
 
     # HELOC ASSUMPTIONS
     # HELOC rate based on: Prime rate (policy rate + 2.5%) + small premium (0.25%)
-    heloc_rate = 0.0525
+    heloc_rate = 0.0545
+
+    margin_rate = 0.0445  # Margin account borrowing rate (for comparison)
 
     # INVESTMENT ASSUMPTIONS
-    annual_investment_return = 0.06
+    annual_investment_return = 0.066
     investment_fee_pct = 0.002  # 0.2% MER
 
     # PROPERTY COST ASSUMPTIONS
@@ -50,7 +52,7 @@ class SimulationAssumptions:
 
     # PROPERTY APPRECIATION
     # Long-term Canadian property appreciation: 2-3% annually
-    annual_property_appreciation = 0.025  # 2.5% annual
+    annual_property_appreciation = 0.021
 
     # TAX ASSUMPTIONS
     # for mid-to-high income earner
@@ -71,6 +73,7 @@ class SmithManeuverSimulator:
         down_payment_pct: float = None,
         mortgage_rate: float = None,
         heloc_rate: float = None,
+        margin_rate: float = None,
         mortgage_term_years: int = None,
         annual_investment_return: float = None,
         annual_property_appreciation: float = None,
@@ -99,6 +102,7 @@ class SmithManeuverSimulator:
 
         self.mortgage_rate = mortgage_rate or assumptions.mortgage_rate
         self.heloc_rate = heloc_rate or assumptions.heloc_rate
+        self.margin_rate = margin_rate or assumptions.margin_rate
         self.mortgage_term_years = (
             mortgage_term_years or assumptions.mortgage_term_years
         )

@@ -43,10 +43,10 @@ class RentVsBuyAssumptions:
     annual_rent_pct_of_home_value = None  # Set to None if using fixed monthly rent
 
     # Option 2: Specify as fixed monthly rent (RECOMMENDED)
-    monthly_rent = 5000  # Fixed monthly rent in dollars ($5k/month = $60k/year)
+    monthly_rent = 5416.67  # Fixed monthly rent in dollars ($5k/month = $60k/year)
 
     # Rent increases
-    annual_rent_increase = 0.025
+    annual_rent_increase = 0.021
 
     # Portfolio Strategy
     # Renter invests in all-equity portfolio (100% stocks, 0% bonds/cash)
@@ -89,6 +89,7 @@ class RentVsBuyCalculator:
         down_payment_pct: float = None,
         mortgage_rate: float = None,
         heloc_rate: float = None,
+        margin_rate: float = None,
         annual_investment_return: float = None,
         annual_property_appreciation: float = None,
         marginal_tax_rate: float = None,
@@ -108,6 +109,7 @@ class RentVsBuyCalculator:
 
         self.mortgage_rate = mortgage_rate or assumptions.mortgage_rate
         self.heloc_rate = heloc_rate or assumptions.heloc_rate
+        self.margin_rate = margin_rate or assumptions.margin_rate
         self.annual_investment_return = (
             annual_investment_return or assumptions.annual_investment_return
         )
@@ -182,7 +184,7 @@ class RentVsBuyCalculator:
         4. Optional leverage with margin loans (DYNAMIC REBALANCING):
            - leverage_ratio=1.0: No leverage (standard renting)
            - leverage_ratio=1.25: Maintain 25% borrowed (1.25x invested) - rebalance annually
-           - leverage_ratio=1.35: Maintain 35% borrowed (1.35x invested) - rebalance annually
+           - leverage_ratio=1.38: Maintain 35% borrowed (1.38x invested) - rebalance annually
            - Margin loan rate: Same as HELOC rate (5.25%)
            - Interest is tax-deductible (similar to mortgage/HELOC)
            - Key: Portfolio grows faster (6%) than debt (5.25%), so rebalance annually
@@ -315,7 +317,7 @@ class RentVsBuyCalculator:
             # Step 6: Margin interest and debt growth (if leveraged)
             if leverage_ratio > 1.0 and margin_debt > 0:
                 # Margin debt grows by interest accrual
-                annual_margin_interest = margin_debt * self.heloc_rate
+                annual_margin_interest = margin_debt * self.margin_rate
                 yearly_data["annual_margin_interest"] = annual_margin_interest
 
                 # Margin interest is tax-deductible
@@ -438,33 +440,33 @@ class RentVsBuyCalculator:
         )
         return simulator.simulate_smith_maneuver()
 
-    def simulate_buy_smith_heavy(self) -> pd.DataFrame:
-        """Simulate Smith Maneuver with Heavy leverage (80% LTV - aggressive)."""
-        simulator = SmithManeuverSimulator(
-            house_price=self.house_price,
-            down_payment_pct=self.down_payment_pct,
-            mortgage_rate=self.mortgage_rate,
-            heloc_rate=self.heloc_rate,
-            annual_investment_return=self.annual_investment_return,
-            annual_property_appreciation=self.annual_property_appreciation,
-            marginal_tax_rate=self.marginal_tax_rate,
-            years=self.years,
-            combined_ltv_target=0.80,
-        )
-        return simulator.simulate_smith_maneuver()
+    # def simulate_buy_smith_heavy(self) -> pd.DataFrame:
+    #     """Simulate Smith Maneuver with Heavy leverage (80% LTV - aggressive)."""
+    #     simulator = SmithManeuverSimulator(
+    #         house_price=self.house_price,
+    #         down_payment_pct=self.down_payment_pct,
+    #         mortgage_rate=self.mortgage_rate,
+    #         heloc_rate=self.heloc_rate,
+    #         annual_investment_return=self.annual_investment_return,
+    #         annual_property_appreciation=self.annual_property_appreciation,
+    #         marginal_tax_rate=self.marginal_tax_rate,
+    #         years=self.years,
+    #         combined_ltv_target=0.80,
+    #     )
+    #     return simulator.simulate_smith_maneuver()
 
     def print_comparison(
         self,
         rent: pd.DataFrame,
         rent_margin_125: pd.DataFrame,
-        rent_margin_135: pd.DataFrame,
+        rent_margin_138: pd.DataFrame,
         buy_traditional: pd.DataFrame,
         buy_smith: pd.DataFrame,
     ) -> None:
         """Print detailed comparison of all five scenarios."""
         rent_final = rent.iloc[-1]
         rent_margin_125_final = rent_margin_125.iloc[-1]
-        rent_margin_135_final = rent_margin_135.iloc[-1]
+        rent_margin_138_final = rent_margin_138.iloc[-1]
         trad_final = buy_traditional.iloc[-1]
         smith_final = buy_smith.iloc[-1]
 
@@ -489,6 +491,7 @@ class RentVsBuyCalculator:
         )
         print(f"  Mortgage Rate: {self.mortgage_rate*100:.2f}%")
         print(f"  HELOC Rate: {self.heloc_rate*100:.2f}%")
+        print(f"  Margin Rate: {self.margin_rate*100:.2f}%")
         print(f"  Investment Return: {self.annual_investment_return*100:.2f}%")
         print(f"  Property Appreciation: {self.annual_property_appreciation*100:.2f}%")
         print(f"  Marginal Tax Rate: {self.marginal_tax_rate*100:.0f}%")
@@ -584,34 +587,34 @@ class RentVsBuyCalculator:
             f"  Margin interest (net of tax benefit): ${rent_margin_125['annual_margin_interest'].sum() - rent_margin_125['annual_margin_interest_tax_benefit'].sum():,.0f}"
         )
 
-        # Scenario 3: Rent with 1.35x Margin
+        # Scenario 3: Rent with 1.38x Margin
         print("\n" + "=" * 110)
-        print("SCENARIO 3: RENT (with 1.35x margin leverage)")
+        print("SCENARIO 3: RENT (with 1.38x margin leverage)")
         print("=" * 110)
         print(
-            f"Total Rent Paid (25 years): ${rent_margin_135['annual_rent_paid'].sum():,.0f}"
+            f"Total Rent Paid (25 years): ${rent_margin_138['annual_rent_paid'].sum():,.0f}"
         )
         print(
             f"Final Annual Rent: ${self.initial_annual_rent * (1 + self.annual_rent_increase) ** self.years:,.0f}"
         )
         print(
-            f"Total Excess Invested (25 years): ${rent_margin_135['excess_available_for_investing'].sum():,.0f}"
+            f"Total Excess Invested (25 years): ${rent_margin_138['excess_available_for_investing'].sum():,.0f}"
         )
         print(
-            f"Total Amount Invested (with 1.35x leverage): ${rent_margin_135['excess_available_for_investing'].sum() * 1.35:,.0f}"
+            f"Total Amount Invested (with 1.38x leverage): ${rent_margin_138['excess_available_for_investing'].sum() * 1.38:,.0f}"
         )
-        print(f"Final Margin Debt: ${rent_margin_135_final['margin_debt']:,.0f}")
+        print(f"Final Margin Debt: ${rent_margin_138_final['margin_debt']:,.0f}")
         print(
-            f"Investment Portfolio: ${rent_margin_135_final['investment_portfolio']:,.0f}"
-        )
-        print(
-            f"Net Liquid Wealth (Portfolio - Margin Debt): ${rent_margin_135_final['total_liquid_wealth']:,.0f}"
+            f"Investment Portfolio: ${rent_margin_138_final['investment_portfolio']:,.0f}"
         )
         print(
-            f"Total Margin Interest Paid: ${rent_margin_135['annual_margin_interest'].sum():,.0f}"
+            f"Net Liquid Wealth (Portfolio - Margin Debt): ${rent_margin_138_final['total_liquid_wealth']:,.0f}"
         )
         print(
-            f"Total Margin Interest Tax Benefit: ${rent_margin_135['annual_margin_interest_tax_benefit'].sum():,.0f}"
+            f"Total Margin Interest Paid: ${rent_margin_138['annual_margin_interest'].sum():,.0f}"
+        )
+        print(
+            f"Total Margin Interest Tax Benefit: ${rent_margin_138['annual_margin_interest_tax_benefit'].sum():,.0f}"
         )
         print(f"\nBreakdown:")
         print(
@@ -619,13 +622,13 @@ class RentVsBuyCalculator:
         )
         print(f"  Initial margin borrowed: ${self.down_payment * 0.35:,.0f}")
         print(
-            f"  Cumulative excess invested (35% borrowed): +${rent_margin_135['excess_available_for_investing'].sum() * 1.35:,.0f}"
+            f"  Cumulative excess invested (35% borrowed): +${rent_margin_138['excess_available_for_investing'].sum() * 1.38:,.0f}"
         )
         print(
-            f"  Investment growth over 25 years: +${rent_margin_135_final['investment_portfolio'] - (self.down_payment * 1.35) - (rent_margin_135['excess_available_for_investing'].sum() * 1.35):,.0f}"
+            f"  Investment growth over 25 years: +${rent_margin_138_final['investment_portfolio'] - (self.down_payment * 1.38) - (rent_margin_138['excess_available_for_investing'].sum() * 1.38):,.0f}"
         )
         print(
-            f"  Margin interest (net of tax benefit): ${rent_margin_135['annual_margin_interest'].sum() - rent_margin_135['annual_margin_interest_tax_benefit'].sum():,.0f}"
+            f"  Margin interest (net of tax benefit): ${rent_margin_138['annual_margin_interest'].sum() - rent_margin_138['annual_margin_interest_tax_benefit'].sum():,.0f}"
         )
 
         # Scenario 4: Buy Traditional
@@ -717,12 +720,12 @@ class RentVsBuyCalculator:
             f"{'2. Rent (1.25x margin)':<45} ${rent_margin_125_final['total_liquid_wealth']:>23,.0f} +${rent_margin_125_advantage:>22,.0f}"
         )
 
-        rent_margin_135_advantage = (
-            rent_margin_135_final["total_liquid_wealth"]
+        rent_margin_138_advantage = (
+            rent_margin_138_final["total_liquid_wealth"]
             - rent_final["total_liquid_wealth"]
         )
         print(
-            f"{'3. Rent (1.35x margin)':<45} ${rent_margin_135_final['total_liquid_wealth']:>23,.0f} +${rent_margin_135_advantage:>22,.0f}"
+            f"{'3. Rent (1.38x margin)':<45} ${rent_margin_138_final['total_liquid_wealth']:>23,.0f} +${rent_margin_138_advantage:>22,.0f}"
         )
 
         buy_trad_advantage = (
@@ -827,7 +830,7 @@ class RentVsBuyCalculator:
         self,
         rent: pd.DataFrame,
         rent_margin_125: pd.DataFrame,
-        rent_margin_135: pd.DataFrame,
+        rent_margin_138: pd.DataFrame,
         buy_traditional: pd.DataFrame,
         buy_smith: pd.DataFrame,
     ) -> None:
@@ -836,14 +839,14 @@ class RentVsBuyCalculator:
         At the end of each year, calculates net worth if everything is sold:
         - Rent (no leverage): Investment portfolio (fully liquid)
         - Rent (1.25x margin): Investment portfolio - margin debt
-        - Rent (1.35x margin): Investment portfolio - margin debt
+        - Rent (1.38x margin): Investment portfolio - margin debt
         - Buy Traditional: House value - remaining mortgage - seller closing costs
         - Buy Smith: House value + investments - mortgage - HELOC - seller closing costs
         """
         years = []
         rent_networth = []
         rent_margin_125_networth = []
-        rent_margin_135_networth = []
+        rent_margin_138_networth = []
         buy_trad_networth = []
         buy_smith_networth = []
 
@@ -862,12 +865,12 @@ class RentVsBuyCalculator:
             )
             rent_margin_125_networth.append(rent_margin_125_nw)
 
-            # RENT (1.35x margin): Portfolio - margin debt
-            rent_margin_135_nw = (
-                rent_margin_135.iloc[idx]["investment_portfolio"]
-                - rent_margin_135.iloc[idx]["margin_debt"]
+            # RENT (1.38x margin): Portfolio - margin debt
+            rent_margin_138_nw = (
+                rent_margin_138.iloc[idx]["investment_portfolio"]
+                - rent_margin_138.iloc[idx]["margin_debt"]
             )
-            rent_margin_135_networth.append(rent_margin_135_nw)
+            rent_margin_138_networth.append(rent_margin_138_nw)
 
             # BUY TRADITIONAL: House value - mortgage balance - seller closing costs
             house_value = buy_traditional.iloc[idx]["house_value"]
@@ -911,10 +914,10 @@ class RentVsBuyCalculator:
         )
         plt.plot(
             years,
-            rent_margin_135_networth,
+            rent_margin_138_networth,
             marker="^",
             linewidth=2.5,
-            label="Rent (1.35x margin)",
+            label="Rent (1.38x margin)",
             color="#F18F01",
         )
         plt.plot(
@@ -971,8 +974,8 @@ class RentVsBuyCalculator:
         )
         plt.text(
             years[final_year_idx],
-            rent_margin_135_networth[final_year_idx],
-            f"${rent_margin_135_networth[final_year_idx]/1e6:.2f}M",
+            rent_margin_138_networth[final_year_idx],
+            f"${rent_margin_138_networth[final_year_idx]/1e6:.2f}M",
             fontsize=8,
             va="bottom",
             ha="right",
@@ -1010,21 +1013,21 @@ class RentVsBuyCalculator:
         self,
         rent: pd.DataFrame,
         rent_margin_125: pd.DataFrame,
-        rent_margin_135: pd.DataFrame,
+        rent_margin_138: pd.DataFrame,
         buy_traditional: pd.DataFrame,
         buy_smith_light: pd.DataFrame,
         buy_smith_median: pd.DataFrame,
-        buy_smith_heavy: pd.DataFrame,
+        # buy_smith_heavy: pd.DataFrame,
     ) -> None:
         """Plot net worth over 25 years for all seven scenarios including SM stress levels."""
         years = []
         rent_networth = []
         rent_margin_125_networth = []
-        rent_margin_135_networth = []
+        rent_margin_138_networth = []
         buy_trad_networth = []
         buy_smith_light_networth = []
         buy_smith_median_networth = []
-        buy_smith_heavy_networth = []
+        # buy_smith_heavy_networth = []
 
         for idx in range(len(rent)):
             year = int(rent.iloc[idx]["year"])
@@ -1041,12 +1044,12 @@ class RentVsBuyCalculator:
             )
             rent_margin_125_networth.append(rent_margin_125_nw)
 
-            # RENT (1.35x margin)
-            rent_margin_135_nw = (
-                rent_margin_135.iloc[idx]["investment_portfolio"]
-                - rent_margin_135.iloc[idx]["margin_debt"]
+            # RENT (1.38x margin)
+            rent_margin_138_nw = (
+                rent_margin_138.iloc[idx]["investment_portfolio"]
+                - rent_margin_138.iloc[idx]["margin_debt"]
             )
-            rent_margin_135_networth.append(rent_margin_135_nw)
+            rent_margin_138_networth.append(rent_margin_138_nw)
 
             # BUY TRADITIONAL
             house_value = buy_traditional.iloc[idx]["house_value"]
@@ -1085,20 +1088,20 @@ class RentVsBuyCalculator:
             )
             buy_smith_median_networth.append(smith_median_nw)
 
-            # BUY SMITH HEAVY (80% LTV)
-            house_value = buy_smith_heavy.iloc[idx]["house_value"]
-            investments = buy_smith_heavy.iloc[idx]["investment_portfolio"]
-            mortgage_balance = buy_smith_heavy.iloc[idx]["mortgage_balance"]
-            heloc_balance = buy_smith_heavy.iloc[idx]["heloc_balance"]
-            seller_closing = house_value * self.seller_closing_cost_pct
-            smith_heavy_nw = (
-                house_value
-                + investments
-                - mortgage_balance
-                - heloc_balance
-                - seller_closing
-            )
-            buy_smith_heavy_networth.append(smith_heavy_nw)
+            # # BUY SMITH HEAVY (80% LTV)
+            # house_value = buy_smith_heavy.iloc[idx]["house_value"]
+            # investments = buy_smith_heavy.iloc[idx]["investment_portfolio"]
+            # mortgage_balance = buy_smith_heavy.iloc[idx]["mortgage_balance"]
+            # heloc_balance = buy_smith_heavy.iloc[idx]["heloc_balance"]
+            # seller_closing = house_value * self.seller_closing_cost_pct
+            # smith_heavy_nw = (
+            #     house_value
+            #     + investments
+            #     - mortgage_balance
+            #     - heloc_balance
+            #     - seller_closing
+            # )
+            # buy_smith_heavy_networth.append(smith_heavy_nw)
 
         # Create plot with 7 scenarios
         # Color scheme: Rent (orange family), Buy (blue family)
@@ -1123,10 +1126,10 @@ class RentVsBuyCalculator:
         )
         plt.plot(
             years,
-            rent_margin_135_networth,
+            rent_margin_138_networth,
             marker="^",
             linewidth=2.5,
-            label="Rent (1.35x)",
+            label="Rent (1.38x)",
             color="#E67E22",  # Dark orange
         )
 
@@ -1155,15 +1158,15 @@ class RentVsBuyCalculator:
             label="Buy (SM 65% LTV)",
             color="#2E5C8A",  # Darker blue
         )
-        plt.plot(
-            years,
-            buy_smith_heavy_networth,
-            marker="*",
-            linewidth=3,
-            markersize=15,
-            label="Buy (SM 80% LTV)",
-            color="#1A3A52",  # Very dark blue
-        )
+        # plt.plot(
+        #     years,
+        #     buy_smith_heavy_networth,
+        #     marker="*",
+        #     linewidth=3,
+        #     markersize=15,
+        #     label="Buy (SM 80% LTV)",
+        #     color="#1A3A52",  # Very dark blue
+        # )
 
         plt.xlabel("Years", fontsize=12, fontweight="bold")
         plt.ylabel("Net Worth ($)", fontsize=12, fontweight="bold")
@@ -1238,34 +1241,38 @@ def main():
     # Run all scenarios
     rent = calculator.simulate_rent(leverage_ratio=1.0)
     rent_margin_125 = calculator.simulate_rent(leverage_ratio=1.25)
-    rent_margin_135 = calculator.simulate_rent(leverage_ratio=1.35)
+    rent_margin_138 = calculator.simulate_rent(leverage_ratio=1.38)
     buy_traditional = calculator.simulate_buy_traditional()
     buy_smith_light = calculator.simulate_buy_smith_light()
     buy_smith_median = calculator.simulate_buy_smith_median()
-    buy_smith_heavy = calculator.simulate_buy_smith_heavy()
+    # buy_smith_heavy = calculator.simulate_buy_smith_heavy()
 
     # Print comparison (only keep key scenarios for report)
     print("SMITH MANEUVER STRESS SCENARIOS:")
     print("=" * 110)
     print("Light (50% LTV):   Conservative - can survive 50% property drop")
     print("Median (65% LTV):  Moderate - can survive 35% property drop")
-    print("Heavy (80% LTV):   Aggressive - can survive 20% property drop")
+    # print("Heavy (80% LTV):   Aggressive - can survive 20% property drop")
     print("=" * 110)
 
-    # For now, print comparison for Heavy (traditional) scenario
-    calculator.print_comparison(
-        rent, rent_margin_125, rent_margin_135, buy_traditional, buy_smith_heavy
-    )
+    # # For now, print comparison for Heavy (traditional) scenario
+    # calculator.print_comparison(
+    #     rent,
+    #     rent_margin_125,
+    #     rent_margin_138,
+    #     buy_traditional,
+    #     buy_smith_heavy
+    # )
 
     # Plot net worth comparison (all 7 scenarios)
     calculator.plot_networth_extended(
         rent,
         rent_margin_125,
-        rent_margin_135,
+        rent_margin_138,
         buy_traditional,
         buy_smith_light,
         buy_smith_median,
-        buy_smith_heavy,
+        # buy_smith_heavy,
     )
 
     # Export results
@@ -1276,8 +1283,8 @@ def main():
         "/Users/leohong/backtesting/home-ownership/scenario_rent_margin_125.csv",
         index=False,
     )
-    rent_margin_135.to_csv(
-        "/Users/leohong/backtesting/home-ownership/scenario_rent_margin_135.csv",
+    rent_margin_138.to_csv(
+        "/Users/leohong/backtesting/home-ownership/scenario_rent_margin_138.csv",
         index=False,
     )
     buy_traditional.to_csv(
@@ -1292,10 +1299,10 @@ def main():
         "/Users/leohong/backtesting/home-ownership/scenario_buy_smith_median.csv",
         index=False,
     )
-    buy_smith_heavy.to_csv(
-        "/Users/leohong/backtesting/home-ownership/scenario_buy_smith_heavy.csv",
-        index=False,
-    )
+    # buy_smith_heavy.to_csv(
+    #     "/Users/leohong/backtesting/home-ownership/scenario_buy_smith_heavy.csv",
+    #     index=False,
+    # )
     print("\n✓ Detailed results exported to CSV files")
 
 
