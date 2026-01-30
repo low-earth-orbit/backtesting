@@ -1121,7 +1121,7 @@ class RentVsBuyCalculator:
             rent_margin_125_networth,
             marker="s",
             linewidth=2.5,
-            label="Rent (1.25x)",
+            label="Rent, 1.25x margin leverage",
             color="#FF9F1C",  # Medium orange
         )
         plt.plot(
@@ -1129,7 +1129,7 @@ class RentVsBuyCalculator:
             rent_margin_138_networth,
             marker="^",
             linewidth=2.5,
-            label="Rent (1.38x)",
+            label="Rent, 1.38x margin leverage",
             color="#E67E22",  # Dark orange
         )
 
@@ -1147,7 +1147,7 @@ class RentVsBuyCalculator:
             buy_smith_light_networth,
             marker="v",
             linewidth=2.5,
-            label="Buy (SM 50% LTV)",
+            label="Buy, SM 50% Combined LTV",
             color="#4A90E2",  # Medium blue
         )
         plt.plot(
@@ -1155,7 +1155,7 @@ class RentVsBuyCalculator:
             buy_smith_median_networth,
             marker="p",
             linewidth=2.5,
-            label="Buy (SM 65% LTV)",
+            label="Buy, SM 65% Combined LTV",
             color="#2E5C8A",  # Darker blue
         )
         # plt.plot(
