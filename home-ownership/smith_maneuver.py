@@ -131,9 +131,7 @@ class SmithManeuverSimulator:
 
         # Combined LTV target for stress scenarios (0.50 = 50%, 0.65 = 65%, 0.80 = 80%)
         # Determines how much leverage is used in Smith Maneuver
-        self.combined_ltv_target = (
-            combined_ltv_target or 0.80
-        )  # Default to traditional 80% LTV
+        self.combined_ltv_target = combined_ltv_target or 0.80  # Default to max 80% LTV
 
     def calculate_monthly_payment(
         self, principal: float, annual_rate: float, months: int

@@ -40,10 +40,10 @@ class RentVsBuyAssumptions:
 
     # RENT ASSUMPTIONS
     # Option 1: Specify as % of property value
-    annual_rent_pct_of_home_value = None  # Set to None if using fixed monthly rent
+    annual_rent_pct_of_home_value = 0.07  # Set to None if using fixed monthly rent
 
-    # Option 2: Specify as fixed monthly rent (RECOMMENDED)
-    monthly_rent = 5416.67  # Fixed monthly rent in dollars ($5k/month = $60k/year)
+    # Option 2: Specify as fixed monthly rent
+    monthly_rent = None  # Fixed monthly rent in dollars ($5k/month = $60k/year)
 
     # Rent increases
     annual_rent_increase = 0.021
@@ -411,7 +411,7 @@ class RentVsBuyCalculator:
         return simulator.simulate_smith_maneuver()
 
     def simulate_buy_smith_light(self) -> pd.DataFrame:
-        """Simulate Smith Maneuver with Light leverage (50% LTV - conservative)."""
+        """Simulate Smith Maneuver with Light leverage (45% LTV - conservative)."""
         simulator = SmithManeuverSimulator(
             house_price=self.house_price,
             down_payment_pct=self.down_payment_pct,
@@ -421,7 +421,7 @@ class RentVsBuyCalculator:
             annual_property_appreciation=self.annual_property_appreciation,
             marginal_tax_rate=self.marginal_tax_rate,
             years=self.years,
-            combined_ltv_target=0.50,
+            combined_ltv_target=0.45,
         )
         return simulator.simulate_smith_maneuver()
 
@@ -1058,7 +1058,7 @@ class RentVsBuyCalculator:
             trad_nw = house_value - mortgage_balance - seller_closing
             buy_trad_networth.append(trad_nw)
 
-            # BUY SMITH LIGHT (50% LTV)
+            # BUY SMITH LIGHT (45% LTV)
             house_value = buy_smith_light.iloc[idx]["house_value"]
             investments = buy_smith_light.iloc[idx]["investment_portfolio"]
             mortgage_balance = buy_smith_light.iloc[idx]["mortgage_balance"]
@@ -1147,7 +1147,7 @@ class RentVsBuyCalculator:
             buy_smith_light_networth,
             marker="v",
             linewidth=2.5,
-            label="Buy, SM 50% Combined LTV",
+            label="Buy, SM 45% Combined LTV",
             color="#4A90E2",  # Medium blue
         )
         plt.plot(
@@ -1250,8 +1250,8 @@ def main():
     # Print comparison (only keep key scenarios for report)
     print("SMITH MANEUVER STRESS SCENARIOS:")
     print("=" * 110)
-    print("Light (50% LTV):   Conservative - can survive 50% property drop")
-    print("Median (65% LTV):  Moderate - can survive 35% property drop")
+    print("Light (45% LTV):   Conservative - can survive 50% property drop")
+    print("Median (65% LTV):  Moderate - can survive 30% property drop")
     # print("Heavy (80% LTV):   Aggressive - can survive 20% property drop")
     print("=" * 110)
 
