@@ -40,13 +40,13 @@ class RentVsBuyAssumptions:
 
     # RENT ASSUMPTIONS
     # Option 1: Specify as % of property value
-    annual_rent_pct_of_home_value = 0.07  # Set to None if using fixed monthly rent
+    annual_rent_pct_of_home_value = 0.06  # Set to None if using fixed monthly rent
 
     # Option 2: Specify as fixed monthly rent
     monthly_rent = None  # Fixed monthly rent in dollars ($5k/month = $60k/year)
 
     # Rent increases
-    annual_rent_increase = 0.021
+    annual_rent_increase = 0.023
 
     # Portfolio Strategy
     # Renter invests in all-equity portfolio (100% stocks, 0% bonds/cash)
